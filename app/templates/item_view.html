@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Вещь — Stylist{% endblock %}
+{% block content %}
+  <div class="bg-white p-6 rounded shadow flex gap-6">
+    <div class="w-1/3">
+      <img src="{{ file_url }}" class="w-full rounded" alt="{{ item.name }}"/>
+    </div>
+    <div class="flex-1">
+      <h2 class="text-2xl font-bold">
+        {{ item.name or "(без названия)" }}
+      </h2>
+      {% set show_category = item.manual_category_ru if item.manual_category_ru else item.category_ru %}
+      {% set show_color = item.manual_color if item.manual_color else item.color_ru %}
+      <div class="text-gray-600 mt-2">
+        Категория: {{ item.display_category }}
+      </div>
+      <div class="text-gray-600 mt-1">
+        Цвет: {{ item.display_color }}
+      </div>
+      <div class="text-gray-500 mt-4 text-sm">
+        Добавлено: {{ item.created_at }}
+      </div>
+      <div class="mt-6 flex gap-4">
+        <a href="/wardrobe/item/{{ item.id }}/edit"
+           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+          Редактировать
+        </a>
+        <form action="/wardrobe/item/{{ item.id }}/delete"
+              method="post"
+              onsubmit="return confirm('Удалить эту вещь?');">
+          <button type="submit"
+                  class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+            Удалить
+          </button>
+        </form>
+        <a href="/wardrobe"
+           class="self-center text-blue-600">
+          Назад к гардеробу
+        </a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Капсула — Stylist{% endblock %}
+{% block content %}
+  <div class="bg-white p-6 rounded shadow">
+    <h2 class="text-2xl font-bold mb-4">{{ cap.name }}</h2>
+    <div class="grid grid-cols-3 gap-4">
+      {% for it in items %}
+        <div class="bg-gray-50 p-3 rounded">
+          <img src="/static/uploads/{{ it.file_id }}" class="w-full h-36 object-cover rounded mb-2"/>
+          <div class="font-medium">{{ it.name or "(без названия)" }}</div>
+        </div>
+      {% endfor %}
+    </div>
+    <a href="/capsules" class="inline-block mt-4 text-blue-600">Назад к списку капсул</a>
+  </div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-white p-6 rounded shadow max-w-lg mx-auto">
+  <h2 class="text-xl font-semibold mb-4">Редактировать вещь</h2>
+  <form action="/wardrobe/item/{{ item.id }}/edit" method="post" class="space-y-3">
+    <label>Имя</label>
+    <input type="text" name="name" value="{{ item.name }}" class="w-full p-2 border rounded"/>
+    <label>Категория (ручная)</label>
+    <input type="text" name="manual_category_ru" value="{{ item.manual_category_ru or item.category_ru }}" class="w-full p-2 border rounded"/>
+    <label>Категория (en)</label>
+    <input type="text" name="manual_category_en" value="{{ item.category_en }}" class="w-full p-2 border rounded"/>
+    <label>Цвет</label>
+    <input type="text" name="manual_color" value="{{ item.manual_color or item.color_ru }}" class="w-full p-2 border rounded"/>
+    <div class="flex gap-3">
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Сохранить</button>
+      <a href="/wardrobe/item/{{ item.id }}" class="text-gray-600 self-center">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

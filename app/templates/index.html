@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Главная — Stylist{% endblock %}
+{% block content %}
+  <div class="bg-white p-8 rounded-lg shadow">
+    <h1 class="text-2xl font-bold mb-4">Как это работает</h1>
+    <p class="mb-3">Загрузи фото вещи — модель CLIP определит категорию и цвет. Затем система может собрать капсулу — набор вещей, которые сочетаются визуально.</p>
+    <ul class="list-disc ml-6 text-gray-700">
+      <li>ML-ядро: CLIP (OpenAI)</li>
+      <li>Бэкенд: FastAPI</li>
+      <li>Интерфейс: Jinja2 + Tailwind</li>
+    </ul>
+
+    <div class="mt-6">
+      <a href="/wardrobe" class="bg-blue-600 text-white px-4 py-2 rounded mr-2">Перейти в гардероб</a>
+      <a href="/capsules" class="bg-gray-200 text-gray-800 px-4 py-2 rounded">Посмотреть капсулы</a>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Гардероб — Stylist{% endblock %}
+{% block content %}
+  <div class="flex gap-6">
+    <div class="w-2/3">
+      <h2 class="text-xl font-semibold mb-4">Мой гардероб</h2>
+      {% if items %}
+        <div class="grid grid-cols-3 gap-4">
+          {% for it in items %}
+            <a href="/wardrobe/item/{{ it.id }}" class="block bg-white p-3 rounded shadow hover:shadow-md">
+              <img src="/static/uploads/{{ it.file_id }}" alt="{{ it.name }}" class="w-full h-40 object-cover rounded mb-2"/>
+              <div class="font-medium">{{ it.name or "(без названия)" }}</div>
+              <div class="text-sm text-gray-500">{{ it.display_color or "" }} • {{ it.display_category or ""}}</div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="bg-white p-6 rounded shadow">Гардероб пуст. Загрузите вещи.</div>
+      {% endif %}
+    </div>
+
+    <div class="w-1/3">
+      <div class="bg-white p-6 rounded shadow">
+        <h3 class="font-semibold mb-3">Добавить вещь</h3>
+        <form action="/wardrobe/add" method="post" enctype="multipart/form-data" class="space-y-3">
+          <input type="file" name="file" accept="image/*" required class="w-full"/>
+          <input type="text" name="name" placeholder="Название (необязательно)" class="w-full border p-2 rounded"/>
+          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Загрузить</button>
+        </form>
+        <p class="text-sm text-gray-500 mt-3">При загрузке фото модель попытается распознать цвет и категорию. Данные сохраняются в базе.</p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

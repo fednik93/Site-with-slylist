@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Сгенерированная капсула{% endblock %}
+{% block content %}
+  <div class="bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">Сгенерированная капсула — средняя схожесть {{ avg_sim | round(2) }}</h2>
+
+    <div class="grid grid-cols-3 gap-4 mb-4">
+      {% for it in items %}
+        <div class="bg-gray-50 p-3 rounded">
+          {% if it.file_name %}
+            <img src="/static/uploads/{{ it.file_id }}" class="w-full h-36 object-cover rounded mb-2"/>
+          {% else %}
+            <div class="w-full h-36 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-400">No image</div>
+          {% endif %}
+          <div class="font-medium">{{ it.name or "(без названия)" }}</div>
+          <div class="text-sm text-gray-500">{{ it.color_ru or "" }} • {{ it.category_en or it.category_ru or "" }}</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <form action="/capsules/save" method="post" class="flex gap-3 items-center">
+      <input type="text" name="name" placeholder="Имя капсулы" class="border p-2 rounded" required/>
+      <input type="hidden" name="item_ids" value="{{ items | map(attribute='id') | join(',') }}"/>
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Сохранить капсулу</button>
+      <a href="/capsules" class="text-gray-500 ml-3">Отмена</a>
+    </form>
+  </div>
+{% endblock %}
