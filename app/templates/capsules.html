@@ -1,33 +1,49 @@
 {% extends "base.html" %}
 {% block title %}Капсулы — Stylist{% endblock %}
 {% block content %}
-  <div class="bg-white p-6 rounded shadow">
-    <h2 class="text-xl font-semibold mb-4">Капсулы</h2>
-    <form action="/capsules/generate" method="post" class="mb-4">
-      <button class="bg-blue-600 text-white px-4 py-2 rounded">Сгенерировать капсулу (из гардероба)</button>
-    </form>
-    {% if message %}
-      <div class="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded">
-        {{ message }}
-      </div>
-    {% endif %}
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold">Капсулы</h1>
+  <form action="/capsules/generate" method="post" class="inline">
+    <button class="px-3 py-2 rounded bg-[var(--accent)] text-white">Сгенерировать</button>
+  </form>
+</div>
 
-    {% if capsules %}
-      <div class="grid grid-cols-3 gap-4">
-        {% for c in capsules %}
-          <a href="/capsules/view/{{ c.id }}" class="block bg-white p-3 rounded shadow">
-            {% if c.thumbnail_file_id %}
-              <img src="/static/uploads/{{ c.thumbnail_file_id }}" class="w-full h-36 object-cover rounded mb-2"/>
-            {% else %}
-              <div class="w-full h-36 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-400">No preview</div>
-            {% endif %}
-            <div class="font-medium">{{ c.name }}</div>
-            <div class="text-xs text-gray-500">Создано: {{ c.created_at }}</div>
-          </a>
-        {% endfor %}
+{% if message %}
+  <div class="mb-4 p-3 bg-yellow-50 text-yellow-800 rounded">{{ message }}</div>
+{% endif %}
+
+{% if capsules %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {% for c in capsules %}
+      <div class="card overflow-hidden rounded-lg shadow-sm">
+        <div class="relative">
+          {% if c.preview %}
+            <a href="/capsules/view/{{ c.id }}">
+              <img src="{{ c.preview }}" class="w-full h-44 object-cover" alt="{{ c.name }}">
+            </a>
+          {% else %}
+            <div class="w-full h-44 bg-gray-100 flex items-center justify-center text-gray-400">Пустая капсула</div>
+          {% endif %}
+          <!-- small badge -->
+          <div class="absolute left-3 top-3 bg-white/80 px-2 py-1 rounded text-xs font-medium text-slate-800">
+            {{ c.item_count }} вещей
+          </div>
+        </div>
+
+        <div class="p-4 flex items-start justify-between gap-3">
+          <div>
+            <a href="/capsules/view/{{ c.id }}" class="text-lg font-semibold text-slate-900">{{ c.name }}</a>
+            <div class="text-xs text-slate-500 mt-1">Создано: {{ c.created_at }}</div>
+          </div>
+
+          <form method="post" action="/capsules/{{ c.id }}/delete" onsubmit="return confirm('Удалить капсулу?');">
+            <button class="text-sm text-rose-600">Удалить</button>
+          </form>
+        </div>
       </div>
-    {% else %}
-      <div class="text-gray-500">Пока нет сохранённых капсул.</div>
-    {% endif %}
+    {% endfor %}
   </div>
+{% else %}
+  <div class="text-gray-500">Пока нет сохранённых капсул.</div>
+{% endif %}
 {% endblock %}

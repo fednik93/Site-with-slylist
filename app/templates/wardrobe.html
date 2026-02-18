@@ -1,34 +1,221 @@
 {% extends "base.html" %}
-{% block title %}Гардероб — Stylist{% endblock %}
+{% block title %}Гардероб{% endblock %}
+
 {% block content %}
-  <div class="flex gap-6">
-    <div class="w-2/3">
-      <h2 class="text-xl font-semibold mb-4">Мой гардероб</h2>
-      {% if items %}
-        <div class="grid grid-cols-3 gap-4">
-          {% for it in items %}
-            <a href="/wardrobe/item/{{ it.id }}" class="block bg-white p-3 rounded shadow hover:shadow-md">
-              <img src="/static/uploads/{{ it.file_id }}" alt="{{ it.name }}" class="w-full h-40 object-cover rounded mb-2"/>
-              <div class="font-medium">{{ it.name or "(без названия)" }}</div>
-              <div class="text-sm text-gray-500">{{ it.display_color or "" }} • {{ it.display_category or ""}}</div>
-            </a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="bg-white p-6 rounded shadow">Гардероб пуст. Загрузите вещи.</div>
-      {% endif %}
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold">Гардероб</h1>
+
+  <!-- Мобильная кнопка фильтров -->
+  <div class="lg:hidden">
+    <button id="open-filters-btn" class="px-3 py-2 rounded-md border text-sm">Фильтры</button>
+  </div>
+</div>
+
+<!-- ====== Табы + кнопка в одной строке ====== -->
+<div class="mb-6 flex items-center justify-between">
+
+  <!-- Табы -->
+  <nav class="inline-flex rounded-md bg-white/60 p-1 shadow-sm">
+    <a href="/wardrobe?view=all"
+       class="px-4 py-2 text-sm rounded-md {% if view == 'all' %}bg-white font-semibold{% else %}text-slate-600{% endif %}">
+       Все вещи
+    </a>
+
+    <a href="/wardrobe?view=categories"
+       class="px-4 py-2 text-sm rounded-md {% if view == 'categories' %}bg-white font-semibold{% else %}text-slate-600{% endif %}">
+       Категории
+    </a>
+  </nav>
+  <!-- Кнопка добавления -->
+  <button id="open-add-modal"
+          class="px-4 py-2 rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)] text-sm shadow-sm">
+    + Добавить
+  </button>
+</div>
+<!-- ====== МОДАЛЬНОЕ ОКНО: загрузка вещи ====== -->
+<div id="add-item-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+  <div class="absolute inset-0 bg-black/40" id="add-modal-backdrop"></div>
+
+  <div class="relative w-full max-w-md mx-auto bg-white rounded-lg p-6 shadow-lg z-50">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold">Добавить вещь</h3>
+      <button id="close-add-modal" class="text-slate-600">✕</button>
     </div>
 
-    <div class="w-1/3">
-      <div class="bg-white p-6 rounded shadow">
-        <h3 class="font-semibold mb-3">Добавить вещь</h3>
-        <form action="/wardrobe/add" method="post" enctype="multipart/form-data" class="space-y-3">
-          <input type="file" name="file" accept="image/*" required class="w-full"/>
-          <input type="text" name="name" placeholder="Название (необязательно)" class="w-full border p-2 rounded"/>
-          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Загрузить</button>
-        </form>
-        <p class="text-sm text-gray-500 mt-3">При загрузке фото модель попытается распознать цвет и категорию. Данные сохраняются в базе.</p>
+    <!-- форма отправляет multipart на /wardrobe/add -->
+    <form method="post" action="/wardrobe/add" enctype="multipart/form-data" class="space-y-3">
+      <div>
+        <label class="text-sm block mb-1">Фото (jpg, png)</label>
+        <input type="file" name="file" accept="image/*" required class="w-full text-sm" />
       </div>
-    </div>
+
+      <div>
+        <label class="text-sm block mb-1">Название (опционально)</label>
+        <input type="text" name="name" placeholder="Футболка, например" class="w-full border rounded p-2 text-sm" />
+      </div>
+      <div>
+        <label class="text-sm block mb-1">Материал (опционально)</label>
+        <input type="text" name="material" placeholder="хлопок, деним, шерсть" class="w-full border rounded p-2 text-sm" />
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button type="button" id="close-add-modal-2" class="px-3 py-2 rounded border text-sm">Отмена</button>
+        <button type="submit" class="px-4 py-2 rounded bg-[var(--accent)] text-white text-sm">Загрузить</button>
+      </div>
+    </form>
   </div>
+</div>
+<!-- ====== JS для открытия/закрытия модалки ====== -->
+<script>
+  // кнопки
+  const openBtn = document.getElementById('open-add-modal');
+  const fabBtn = document.getElementById('fab-open-add');
+  const modal = document.getElementById('add-item-modal');
+  const closeBtn = document.getElementById('close-add-modal');
+  const closeBtn2 = document.getElementById('close-add-modal-2');
+  const backdrop = document.getElementById('add-modal-backdrop');
+
+  function showModal() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+  function hideModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+  openBtn?.addEventListener('click', showModal);
+  fabBtn?.addEventListener('click', showModal);
+  closeBtn?.addEventListener('click', hideModal);
+  closeBtn2?.addEventListener('click', hideModal);
+  backdrop?.addEventListener('click', hideModal);
+
+  // accessibility: Esc закрывает
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModal(); });
+</script>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <!-- SIDEBAR: занимает 3/12 колонок на lg -->
+  <aside id="filters-aside" class="hidden lg:block lg:col-span-3 card p-5 sticky top-20 h-fit z-30">
+    <h3 class="font-semibold mb-4">Фильтры</h3>
+
+    <form method="get" action="/wardrobe" id="filters-form">
+      <input type="hidden" name="view" value="all" />
+      <!-- Категория -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-1">Категория</label>
+        <select name="category" class="w-full border rounded p-2 text-sm">
+          <option value="">Все</option>
+          {% for c in categories %}
+            <option value="{{ c.name }}" {% if selected_category == c.name %}selected{% endif %}>{{ c.name }} ({{ c.count }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Цвет (если есть) -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-1">Цвет</label>
+        <select name="color" class="w-full border rounded p-2 text-sm">
+          <option value="">Все</option>
+          {% for col in colors %}
+            <option value="{{ col }}" {% if selected_color == col %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+
+      <!-- Материал -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-1">Материал</label>
+        <select name="material" class="w-full border rounded p-2 text-sm">
+          <option value="">Все</option>
+          {% for m in materials %}
+            <option value="{{ m }}" {% if selected_material == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+        <div class="mt-2 text-xs text-slate-500">Если материала нет в списке — укажите его при редактировании вещи.</div>
+      </div>
+
+
+      <div class="flex gap-2">
+        <button type="submit" class="px-3 py-2 rounded bg-[var(--accent)] text-white text-sm">Применить</button>
+        <a href="/wardrobe?view=all" class="px-3 py-2 rounded border text-sm">Сбросить</a>
+      </div>
+    </form>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="lg:col-span-9">
+    {% if view == 'all' %}
+      <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {% for item in items %}
+          <article class="relative z-10">
+            <!-- ссылка оборачивает всю карточку -->
+            <a href="/wardrobe/item/{{ item.id }}" class="block card p-3 rounded-lg hover:shadow-md transition">
+              <div class="w-full h-44 bg-gray-100 rounded overflow-hidden">
+                <img src="/static/uploads/{{ item.file_id }}" alt="{{ item.name or item.display_category }}" class="w-full h-full object-cover">
+              </div>
+
+              <div class="mt-3">
+                <div class="text-sm font-medium text-slate-900">{{ item.name or item.display_category }}</div>
+                <div class="text-xs text-slate-500 mt-1">{{ item.display_color or '' }} • {{ item.display_category or '' }}</div>
+                <div class="mt-2 text-xs text-slate-400">{{ item.created_at }}</div>
+              </div>
+            </a>
+
+          </article>
+        {% endfor %}
+
+        {% if not items %}
+          <div class="col-span-full text-center text-slate-500">Пока нет добавленных вещей.</div>
+        {% endif %}
+      </section>
+    {% elif view == 'categories' %}
+      <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for cat in categories %}
+          <a href="/wardrobe?view=all&category={{ cat.name }}" class="card p-6 rounded-lg text-center hover:shadow-md transition">
+            <div class="text-lg font-semibold mb-2">{{ cat.name }}</div>
+            <div class="text-sm text-slate-500">{{ cat.count }} вещей</div>
+          </a>
+        {% endfor %}
+      </section>
+    {% endif %}
+  </main>
+</div>
+
+<!-- MOBILE FILTER DRAWER -->
+<div id="mobile-filters" class="fixed inset-0 z-40 hidden">
+  <div class="absolute inset-0 bg-black/40" id="mobile-filters-backdrop"></div>
+  <div class="absolute right-0 top-0 h-full w-full max-w-xs bg-white shadow-lg p-5 overflow-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold">Фильтры</h3>
+      <button id="close-filters-btn" class="text-slate-600">Закрыть</button>
+    </div>
+
+    <!-- Вставляем тот же фильтрующий форму, но GET -->
+    <form method="get" action="/wardrobe">
+      <input type="hidden" name="view" value="all">
+      <div class="mb-3">
+        <label class="text-sm font-medium">Категория</label>
+        <select name="category" class="w-full border rounded p-2 text-sm">
+          <option value="">Все</option>
+          {% for c in categories %}
+            <option value="{{ c.name }}" {% if selected_category == c.name %}selected{% endif %}>{{ c.name }} ({{ c.count }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- Можно добавить color/material аналогично -->
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="px-3 py-2 rounded bg-[var(--accent)] text-white text-sm">Применить</button>
+        <a href="/wardrobe?view=all" class="px-3 py-2 rounded border text-sm">Сбросить</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Минимальный JS для mobile drawer -->
+<script>
+  document.getElementById('open-filters-btn')?.addEventListener('click', () => {
+    document.getElementById('mobile-filters').classList.remove('hidden');
+  });
+  document.getElementById('close-filters-btn')?.addEventListener('click', () => {
+    document.getElementById('mobile-filters').classList.add('hidden');
+  });
+  document.getElementById('mobile-filters-backdrop')?.addEventListener('click', () => {
+    document.getElementById('mobile-filters').classList.add('hidden');
+  });
+</script>
 {% endblock %}

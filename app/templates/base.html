@@ -1,34 +1,80 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{% block title %}Stylist{% endblock %}</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 min-h-screen">
-    <nav class="bg-white shadow">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <a href="/" class="text-xl font-semibold">Stylist</a>
-        <a href="/wardrobe" class="text-sm text-gray-600 hover:text-gray-900">Гардероб</a>
-        <a href="/capsules" class="text-sm text-gray-600 hover:text-gray-900">Капсулы</a>
-      </div>
 
-      <div class="flex items-center gap-4">
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --accent: #0d9488; /* teal-600 */
+      --accent-dark: #0f766e; /* teal-700 */
+      --muted-bg: #f3f4f6; /* gray-100 */
+    }
+    body { background: var(--muted-bg); }
+    .card { background: white; border-radius: 12px; box-shadow: 0 6px 18px rgba(15,23,42,0.06); }
+  </style>
+
+  {% block head %}{% endblock %}
+</head>
+<body class="antialiased text-slate-900">
+
+  <!-- NAV -->
+  <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b">
+    <div class="mx-auto max-w-5xl px-6 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-md bg-[var(--accent)] flex items-center justify-center text-white font-semibold">S</div>
+        <div>
+          <div class="font-semibold">Stylist</div>
+          <div class="text-xs text-slate-500">умный гардероб</div>
+        </div>
+      </a>
+
+      <nav class="flex items-center gap-4 text-sm">
+        <a href="/wardrobe" class="text-slate-700 hover:text-slate-900">Гардероб</a>
+        <a href="/capsules" class="text-slate-700 hover:text-slate-900">Капсулы</a>
+        <a href="/about" class="text-slate-600 hover:text-slate-900">О стиле</a>
+
         {% if current_user %}
-          <div class="text-sm text-gray-700">Вошёл как <strong>{{ current_user.email }}</strong></div>
-          <form action="/logout" method="post" class="inline">
-            <button type="submit" class="text-sm text-gray-600 hover:text-gray-900">Выйти</button>
-          </form>
+          <div class="ml-4 flex items-center gap-3">
+            <span class="text-sm text-slate-700">Привет, <strong class="font-medium">{{ current_user.email }}</strong></span>
+            <form method="post" action="/logout" class="inline">
+              <button class="px-3 py-1 rounded-md bg-white border text-sm text-slate-700 hover:bg-slate-50">Выйти</button>
+            </form>
+          </div>
         {% else %}
-          <a href="/login" class="text-sm text-gray-600">Войти</a>
-          <a href="/register" class="ml-2 text-sm text-gray-600">Регистрация</a>
+          <a href="/login" class="px-3 py-1 rounded-md text-slate-700 hover:bg-slate-50">Войти</a>
+          <a href="/register" class="px-3 py-1 rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-dark)]">Регистрация</a>
         {% endif %}
-      </div>
+      </nav>
     </div>
-  </nav>
-  <main class="max-w-5xl mx-auto p-6">
+  </header>
+
+  <!-- MAIN -->
+  <main class="mx-auto max-w-5xl px-6 py-12">
+    {% if message %}
+      <div class="mb-6 p-4 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100">{{ message }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="mb-6 p-4 rounded-md bg-rose-50 text-rose-700 border border-rose-100">{{ error }}</div>
+    {% endif %}
+
     {% block content %}{% endblock %}
   </main>
+
+  <!-- FOOTER -->
+  <footer class="mt-16">
+    <div class="mx-auto max-w-5xl px-6 py-6 text-sm text-slate-600 flex items-center justify-between">
+      <div>© Stylist — учебный проект</div>
+      <div class="flex gap-4">
+        <a href="/privacy" class="hover:text-slate-900">Политика приватности</a>
+        <a href="mailto:you@example.com" class="hover:text-slate-900">Контакты</a>
+      </div>
+    </div>
+  </footer>
+
 </body>
 </html>

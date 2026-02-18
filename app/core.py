@@ -12,7 +12,7 @@ CLOTHING_CATEGORIES = [
     "t-shirt", "top", "shirt", "blouse", "hoodie", "sweater", "cardigan",
     "jeans", "trousers", "leggings", "skirt", "shorts",
     "dress", "jumpsuit",
-    "jacket", "coat", "raincoat",
+    "jacket", "suit jacket", "coat", "raincoat",
     "sneakers", "boots", "heels", "sandals",
     "hat", "scarf", "bag", "accessories"
 ]
@@ -22,7 +22,7 @@ CATEGORY_MAP = {
     "hoodie": "худи", "sweater": "свитер", "cardigan": "кардиган",
     "jeans": "джинсы", "trousers": "брюки", "leggings": "леггинсы", "skirt": "юбка", "shorts": "шорты",
     "dress": "платье", "jumpsuit": "комбинезон",
-    "jacket": "куртка", "coat": "пальто", "raincoat": "плащ",
+    "jacket": "куртка", "suit jacket": "пиджак", "coat": "пальто", "raincoat": "плащ",
     "sneakers": "кроссовки", "boots": "ботинки", "heels": "туфли/каблуки", "sandals": "сандалии",
     "hat": "шапка/шляпа", "scarf": "шарф", "bag": "сумка",
     "accessories": "аксессуары"

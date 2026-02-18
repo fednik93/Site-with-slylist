@@ -1,16 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Капсула — Stylist{% endblock %}
+{% block title %}Капсула — {{ cap.name }}{% endblock %}
 {% block content %}
-  <div class="bg-white p-6 rounded shadow">
-    <h2 class="text-2xl font-bold mb-4">{{ cap.name }}</h2>
-    <div class="grid grid-cols-3 gap-4">
-      {% for it in items %}
-        <div class="bg-gray-50 p-3 rounded">
-          <img src="/static/uploads/{{ it.file_id }}" class="w-full h-36 object-cover rounded mb-2"/>
-          <div class="font-medium">{{ it.name or "(без названия)" }}</div>
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold">{{ cap.name }}</h1>
+  <div class="text-sm text-slate-500">{{ cap.created_at }}</div>
+</div>
+
+{% if items %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    {% for it in items %}
+      <div class="card rounded-lg overflow-hidden">
+        <img src="{{ it.file_path }}" class="w-full h-48 object-cover"/>
+        <div class="p-3">
+          <div class="font-medium">{{ it.name or it.category_ru }}</div>
+          <div class="text-sm text-slate-500 mt-1">{{ it.color_ru or '' }}</div>
+          <div class="mt-3 flex gap-2">
+            <a href="/wardrobe/item/{{ it.id }}" class="text-xs text-slate-700">Открыть</a>
+            <a href="/wardrobe/item/{{ it.id }}/edit" class="text-xs text-slate-700">Редактировать</a>
+          </div>
         </div>
-      {% endfor %}
-    </div>
-    <a href="/capsules" class="inline-block mt-4 text-blue-600">Назад к списку капсул</a>
+      </div>
+    {% endfor %}
   </div>
+{% else %}
+  <div class="p-6 bg-white rounded text-center text-slate-500">Капсула пуста.</div>
+{% endif %}
 {% endblock %}

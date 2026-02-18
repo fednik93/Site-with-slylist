@@ -11,6 +11,8 @@
     <input type="text" name="manual_category_en" value="{{ item.category_en }}" class="w-full p-2 border rounded"/>
     <label>Цвет</label>
     <input type="text" name="manual_color" value="{{ item.manual_color or item.color_ru }}" class="w-full p-2 border rounded"/>
+    <label class="text-sm block mb-1">Материал</label>
+    <input type="text" name="manual_material" value="{{ item.manual_material or '' }}" class="w-full border rounded p-2 text-sm" />
     <div class="flex gap-3">
       <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Сохранить</button>
       <a href="/wardrobe/item/{{ item.id }}" class="text-gray-600 self-center">Отмена</a>

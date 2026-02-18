@@ -1,18 +1,86 @@
 {% extends "base.html" %}
 {% block title %}Главная — Stylist{% endblock %}
-{% block content %}
-  <div class="bg-white p-8 rounded-lg shadow">
-    <h1 class="text-2xl font-bold mb-4">Как это работает</h1>
-    <p class="mb-3">Загрузи фото вещи — модель CLIP определит категорию и цвет. Затем система может собрать капсулу — набор вещей, которые сочетаются визуально.</p>
-    <ul class="list-disc ml-6 text-gray-700">
-      <li>ML-ядро: CLIP (OpenAI)</li>
-      <li>Бэкенд: FastAPI</li>
-      <li>Интерфейс: Jinja2 + Tailwind</li>
-    </ul>
 
-    <div class="mt-6">
-      <a href="/wardrobe" class="bg-blue-600 text-white px-4 py-2 rounded mr-2">Перейти в гардероб</a>
-      <a href="/capsules" class="bg-gray-200 text-gray-800 px-4 py-2 rounded">Посмотреть капсулы</a>
+{% block content %}
+<!-- HERO -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center mb-12">
+  <div class="space-y-6">
+    <div class="inline-flex items-center gap-3">
+      <div class="px-2 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">MVP</div>
+      <div class="text-xs text-slate-500">Демонстрационная версия</div>
+    </div>
+
+    <h1 class="text-4xl font-extrabold leading-tight text-slate-900">Организуй гардероб. Собирай капсулы. Выглядй лучше.</h1>
+
+    <p class="text-lg text-slate-700 max-w-xl">Загружай фото вещей, редактируй метаданные и автоматически собирай базовые комплекты. Виртуальная примерка — в планах (будет доступна в будущем).</p>
+
+    <div class="flex items-center gap-4">
+      <a href="/wardrobe" class="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-[var(--accent)] text-white font-semibold shadow-sm">Открыть гардероб</a>
+
+      <button class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white border text-slate-700" disabled aria-disabled="true">
+        Примерка — скоро
+      </button>
+    </div>
+
+    <div class="mt-4 text-sm text-slate-600 max-w-prose">
+      <strong>Совет:</strong> загрузи 6–10 предметов — так капсулы будут выглядеть осмысленнее.
     </div>
   </div>
+
+  <div class="card p-6 rounded-2xl">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-sm text-slate-600">Текущие фичи</div>
+        <h3 class="text-xl font-semibold text-slate-900">Что умеет Stylist</h3>
+      </div>
+      <div class="text-xs text-slate-500">v0.1</div>
+    </div>
+
+    <div class="mt-6 space-y-4">
+      <div class="flex gap-4 items-start">
+        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-700 font-semibold">1</div>
+        <div>
+          <div class="font-medium text-slate-800">Добавление вещей</div>
+          <div class="text-sm text-slate-600">Загружай фото — система анализирует цвет/категорию, но ты можешь править.</div>
+        </div>
+      </div>
+
+      <div class="flex gap-4 items-start">
+        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-700 font-semibold">2</div>
+        <div>
+          <div class="font-medium text-slate-800">Генерация капсул</div>
+          <div class="text-sm text-slate-600">Алгоритм подбирает сочетания из твоего гардероба для презентации.</div>
+        </div>
+      </div>
+
+      <div class="flex gap-4 items-start">
+        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-700 font-semibold">3</div>
+        <div>
+          <div class="font-medium text-slate-800">Редактирование</div>
+          <div class="text-sm text-slate-600">Подправь категорию или цвет, если модель ошиблась.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 text-sm text-slate-600">
+      <strong>В разработке:</strong> виртуальная примерка и экспорт капсул.
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="card p-6">
+    <h4 class="font-semibold text-slate-900 mb-2">Простой поток</h4>
+    <p class="text-sm text-slate-600">Зарегистрируйся → добавь вещи → сгенерируй капсулу.</p>
+  </div>
+  <div class="card p-6">
+    <h4 class="font-semibold text-slate-900 mb-2">Контроль</h4>
+    <p class="text-sm text-slate-600">Исправляй ошибки распознавания вручную — это улучшит результаты.</p>
+  </div>
+  <div class="card p-6">
+    <h4 class="font-semibold text-slate-900 mb-2">Готовность к ML</h4>
+    <p class="text-sm text-slate-600">Планируем интеграцию с ML-сервисами для примерки и улучшения качества метаданных.</p>
+  </div>
+</section>
 {% endblock %}
