@@ -15,29 +15,36 @@
 {% if capsules %}
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     {% for c in capsules %}
-      <div class="card overflow-hidden rounded-lg shadow-sm">
-        <div class="relative">
+      <div class="card-modern group overflow-hidden">
+        <div class="relative h-48 bg-slate-100">
           {% if c.preview %}
             <a href="/capsules/view/{{ c.id }}">
-              <img src="{{ c.preview }}" class="w-full h-44 object-cover" alt="{{ c.name }}">
+              <img src="{{ c.preview }}" class="w-full h-full object-cover" alt="{{ c.name }}">
             </a>
           {% else %}
-            <div class="w-full h-44 bg-gray-100 flex items-center justify-center text-gray-400">Пустая капсула</div>
+            <div class="w-full h-full flex items-center justify-center text-slate-400">Пустая капсула</div>
           {% endif %}
-          <!-- small badge -->
-          <div class="absolute left-3 top-3 bg-white/80 px-2 py-1 rounded text-xs font-medium text-slate-800">
-            {{ c.item_count }} вещей
+
+          <div class="absolute bottom-3 right-3 px-2 py-1 bg-white/90 backdrop-blur rounded-lg text-[10px] font-bold shadow-sm">
+            {{ c.item_count }} предмета
           </div>
         </div>
 
-        <div class="p-4 flex items-start justify-between gap-3">
-          <div>
-            <a href="/capsules/view/{{ c.id }}" class="text-lg font-semibold text-slate-900">{{ c.name }}</a>
-            <div class="text-xs text-slate-500 mt-1">Создано: {{ c.created_at }}</div>
+        <div class="p-5 flex items-center justify-between bg-white">
+          <div class="space-y-1">
+            <a href="/capsules/view/{{ c.id }}" class="block font-800 text-slate-900 hover:text-teal-600 transition-colors tracking-tight text-base">
+              {{ c.name }}
+            </a>
+            <div class="inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Готовый образ</span>
+            </div>
           </div>
 
-          <form method="post" action="/capsules/{{ c.id }}/delete" onsubmit="return confirm('Удалить капсулу?');">
-            <button class="text-sm text-rose-600">Удалить</button>
+          <form method="post" action="/capsules/delete/{{ c.id }}" onsubmit="return confirm('Удалить капсулу?')">
+            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-300 hover:bg-rose-50 hover:text-rose-500 transition-all">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </form>
         </div>
       </div>

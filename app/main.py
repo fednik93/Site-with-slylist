@@ -5,7 +5,8 @@ import os
 import shutil
 from typing import Optional, List
 from datetime import datetime, timezone
-
+from app.core import remove_background_auto
+from uuid import uuid4
 import asyncpg
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -197,103 +198,151 @@ async def view_wardrobe(request: Request):
     if not db_pool:
         raise HTTPException(status_code=500)
 
-    view = request.query_params.get("view", "all")
-    selected_category = request.query_params.get("category")
-    selected_color = request.query_params.get("color")
-    selected_material = request.query_params.get("material")
+    # --- читаем множественные параметры из query
+    # Request.query_params.multi_items() возвращает список (key,value)
+    qp = request.query_params
+    selected_category_list = [v for k, v in qp.multi_items() if k == "category"]
+    selected_color_list = [v for k, v in qp.multi_items() if k == "color"]
+    selected_material_list = [v for k, v in qp.multi_items() if k == "material"]
+    view_mode = qp.get("view", "all")
+
+    # --- строим WHERE динамически с параметрами для asyncpg
+    conditions = ["user_id = $1"]
+    args = [user["id"]]
+    idx = 2
+
+    if selected_category_list:
+        conditions.append(f"(manual_category_ru = ANY(${idx}) OR manual_category_en = ANY(${idx}) OR category_ru = ANY(${idx}) OR category_en = ANY(${idx}))")
+        args.append(selected_category_list)
+        idx += 1
+
+    if selected_color_list:
+        conditions.append(f"(COALESCE(NULLIF(manual_color,''), NULLIF(color_ru,''), NULLIF(color_en,'')) = ANY(${idx}))")
+        args.append(selected_color_list)
+        idx += 1
+
+    if selected_material_list:
+        conditions.append(f"(COALESCE(NULLIF(manual_material,''), '') = ANY(${idx}))")
+        args.append(selected_material_list)
+        idx += 1
+
+    where_clause = " AND ".join(conditions)
+    sql = f"""
+        SELECT id, file_id, name, color_ru, color_en, manual_color, manual_material,
+               category_en, category_ru, manual_category_en, manual_category_ru, created_at
+        FROM wardrobe
+        WHERE {where_clause}
+        ORDER BY created_at DESC
+        LIMIT 500
+    """
 
     items = []
-    categories = []
-    colors = []
-    materials = []
-
     async with db_pool.acquire() as conn:
-        # --- items with optional filters ---
-        base_query = """
-            SELECT id, file_id, name,
-                   color_ru, category_ru,
-                   manual_category_ru, manual_category_en,
-                   manual_color, manual_material,
-                   created_at
-            FROM wardrobe
-            WHERE user_id=$1
-        """
-        params = [user["id"]]
-        idx = 2
-        if selected_category:
-            base_query += f" AND (category_ru=${idx} OR manual_category_ru=${idx})"
-            params.append(selected_category); idx += 1
-        if selected_color:
-            base_query += f" AND (manual_color=${idx} OR color_ru=${idx})"
-            params.append(selected_color); idx += 1
-        if selected_material:
-            base_query += f" AND (manual_material=${idx})"
-            params.append(selected_material); idx += 1
-
-        base_query += " ORDER BY created_at DESC"
-        rows = await conn.fetch(base_query, *params)
-
+        rows = await conn.fetch(sql, *args)
         for r in rows:
             it = dict(r)
-            it["display_category"] = it.get("manual_category_ru") or it.get("manual_category_en") or it.get("category_ru")
-            it["display_color"] = it.get("manual_color") or it.get("color_ru")
-            it["display_material"] = it.get("manual_material") or ""
+            it["display_category"] = (
+                it.get("manual_category_ru")
+                or it.get("manual_category_en")
+                or it.get("category_ru")
+            )
+            it["display_color"] = (
+                it.get("manual_color")
+                or it.get("color_ru")
+            )
+            it["file_path"] = f"/static/uploads/{it['file_id']}" if it.get("file_id") else None
             items.append(it)
 
-        # --- categories aggregate ---
-        cat_rows = await conn.fetch("""
-            SELECT COALESCE(manual_category_ru, category_ru) AS name, COUNT(*) AS count
-            FROM wardrobe WHERE user_id=$1
-            GROUP BY COALESCE(manual_category_ru, category_ru)
-            ORDER BY count DESC
-        """, user["id"])
-        categories = [dict(r) for r in cat_rows]
+        # подготовим списки значений для дропдаунов
+            # Улучшенный запрос: получаем имя категории, количество вещей и ID файла последней добавленной вещи
+            cats = await conn.fetch("""
+                    WITH category_data AS (
+                        SELECT 
+                            COALESCE(NULLIF(manual_category_ru, ''), NULLIF(category_ru, ''), NULLIF(category_en, '')) AS cat_name,
+                            file_id,
+                            created_at
+                        FROM wardrobe
+                        WHERE user_id = $1
+                    ),
+                    latest_photos AS (
+                        SELECT DISTINCT ON (cat_name) cat_name, file_id
+                        FROM category_data
+                        ORDER BY cat_name, created_at DESC
+                    ),
+                    counts AS (
+                        SELECT cat_name, COUNT(*) as cnt
+                        FROM category_data
+                        GROUP BY cat_name
+                    )
+                    SELECT c.cat_name AS name, c.cnt AS count, lp.file_id
+                    FROM counts c
+                    JOIN latest_photos lp ON c.cat_name = lp.cat_name
+                    ORDER BY c.cnt DESC
+                """, user["id"])
 
-        # --- distinct colors ---
-        color_rows = await conn.fetch("""
-            SELECT DISTINCT COALESCE(manual_color, color_ru) AS color
+            categories = [{"name": c["name"], "count": c["count"], "last_image": c["file_id"]} for c in cats]
+
+        # цвета: собираем уникальные значения (manual_color / color_ru / color_en)
+        cols = await conn.fetch("""
+            SELECT DISTINCT COALESCE(NULLIF(manual_color,''), NULLIF(color_ru,''), NULLIF(color_en,'')) AS color
             FROM wardrobe
-            WHERE user_id=$1 AND COALESCE(manual_color, color_ru) IS NOT NULL
+            WHERE user_id=$1 AND COALESCE(NULLIF(manual_color,''), NULLIF(color_ru,''), NULLIF(color_en,'')) IS NOT NULL
         """, user["id"])
-        colors = [r["color"] for r in color_rows if r["color"]]
+        colors = [c["color"] for c in cols]
 
-        # --- distinct materials (manual only) ---
-        material_rows = await conn.fetch("""
-            SELECT DISTINCT manual_material AS material
+        # материалы: уникальные manual_material (или пустые) — если нет, вернём пустой список
+        mats = await conn.fetch("""
+            SELECT DISTINCT COALESCE(NULLIF(manual_material,''), '') AS mat
             FROM wardrobe
-            WHERE user_id=$1 AND manual_material IS NOT NULL
+            WHERE user_id=$1 AND COALESCE(NULLIF(manual_material,''), '') <> ''
         """, user["id"])
-        materials = [r["material"] for r in material_rows if r["material"]]
+        materials = [m["mat"] for m in mats]
 
-    return await render_template(
-        request,
-        "wardrobe.html",
-        {
-            "items": items,
-            "categories": categories,
-            "colors": colors,
-            "materials": materials,
-            "view": view,
-            "selected_category": selected_category,
-            "selected_color": selected_color,
-            "selected_material": selected_material
-        }
-    )
+    # render
+    return await render_template(request, "wardrobe.html", {
+        "items": items,
+        "categories": categories,
+        "colors": colors,
+        "materials": materials,
+        "selected_category_list": selected_category_list,
+        "selected_color_list": selected_color_list,
+        "selected_material_list": selected_material_list,
+        "view": view_mode
+    })
 @app.post("/wardrobe/add", response_class=HTMLResponse)
 async def add_to_wardrobe(request: Request, file: UploadFile = File(...), name: Optional[str] = Form(None), material: Optional[str] = Form(None)):
     user = await get_current_user(request)
     if not user:
         return RedirectResponse("/login")
 
-    safe_name = f"{user['id']}_{int(datetime.now().timestamp())}_{file.filename.replace('/', '_')}"
-    dest_path = os.path.join(UPLOAD_DIR, safe_name)
-    with open(dest_path, "wb") as buffer:
+    # сохраняем оригинал (для анализа)
+    orig_name = f"{user['id']}_{int(datetime.now().timestamp())}_{file.filename.replace('/', '_')}"
+    orig_path = os.path.join(UPLOAD_DIR, orig_name)
+    with open(orig_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    with open(dest_path, "rb") as f:
+    # прочитаем байты (используется для удаления фона)
+    with open(orig_path, "rb") as f:
         b = f.read()
+
+    # Попытка удалить фон и получить PNG
+    try:
+        png_bytes = remove_background_auto(b, use_rembg_if_available=True, pad_size=(600,600))
+        # сохранение PNG
+        png_name = f"{user['id']}_{uuid4().hex}.png"
+        png_path = os.path.join(UPLOAD_DIR, png_name)
+        with open(png_path, "wb") as f2:
+            f2.write(png_bytes)
+        display_file_name = png_name   # будет использоваться в карточках
+    except Exception as e:
+        # если не удалось удалить фон — fallback на оригинал (можно искащовать белым фоном)
+        print("Background removal failed:", e)
+        display_file_name = orig_name
+
+    # анализ изображения для CLIP — используем оригинал (рекомендуется)
     info = analyze_image_bytes(b)
 
+    # сохраняем в БД: сохраняем file_id = display_file_name (тот, что показываем)
     if db_pool:
         emb = info.get("emb")
         emb_bytes = emb.tobytes() if emb is not None else None
@@ -301,13 +350,10 @@ async def add_to_wardrobe(request: Request, file: UploadFile = File(...), name: 
             await conn.execute("""
                 INSERT INTO wardrobe (user_id, file_id, emb, name, color_en, color_ru, category_en, category_ru, manual_material, created_at)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            """, user["id"], safe_name, emb_bytes, name or info.get("category_ru"),
-                               info.get("color_en"), info.get("color_ru"),
-                               info.get("category_en"), info.get("category_ru"),
-                               material, datetime.now(timezone.utc))
+            """, user["id"], display_file_name, emb_bytes, name or info.get("category_ru"), info.get("color_en"), info.get("color_ru"),
+                 info.get("category_en"), info.get("category_ru"), material or None, datetime.now(timezone.utc))
 
     return RedirectResponse(url="/wardrobe", status_code=303)
-
 
 @app.get("/wardrobe/item/{item_id}", response_class=HTMLResponse)
 async def view_item(request: Request, item_id: int):
@@ -523,58 +569,52 @@ async def delete_capsule(request: Request, cap_id: int):
         await conn.execute("DELETE FROM capsules WHERE id=$1", cap_id)
 
     return RedirectResponse("/capsules", status_code=303)
-
 @app.post("/capsules/generate", response_class=HTMLResponse)
-async def generate_capsule_web(request: Request):
+async def generate_capsule_web(request: Request, group_size: int = Form(6)):
     user = await get_current_user(request)
     user_id_for_gen = user["id"] if user else 0
-
-    if not db_pool:
-        raise HTTPException(status_code=500, detail="Database not configured")
-
-    # items: список словарей, которые вернёт генератор — приводим к единому виду
-    items, avg_sim = await generate_capsule_items_for_user(db_pool, user_id=user_id_for_gen, candidates_per_group=40)
-
-    # Нормализуем поля — гарантируем, что у каждого элемента есть file_path
-    for it in items:
-        # возможные ключи, которые встречались в проекте: 'file_id', 'file_name'
-        file_key = None
-        if it.get("file_id"):
-            file_key = it["file_id"]
-        elif it.get("file_name"):
-            file_key = it["file_name"]
-        elif it.get("file"):
-            file_key = it["file"]
-
-        if isinstance(file_key, int) and db_pool:
-            async with db_pool.acquire() as conn:
-                prow = await conn.fetchrow("SELECT file_id FROM wardrobe WHERE id=$1", file_key)
-                if prow:
-                    file_key = prow["file_id"]
-        it["file_path"] = f"/static/uploads/{file_key}" if file_key else None
-
-    return templates.TemplateResponse("capsule_generated.html", {"request": request, "items": items, "avg_sim": avg_sim})
-
+    items, avg_sim, warnings = await generate_capsule_items_for_user(db_pool, user_id=user_id_for_gen, group_size=group_size)
+    return await render_template(request, "capsule_generated.html", {"items": items, "avg_sim": avg_sim, "warnings": warnings, "group_size": group_size})
 @app.post("/capsules/save", response_class=HTMLResponse)
 async def save_capsule_web(request: Request, name: str = Form(...), item_ids: str = Form(...)):
     user = await get_current_user(request)
     if not user:
         return RedirectResponse("/login")
-
     ids = [int(x) for x in item_ids.split(",") if x.strip()]
+    if not ids:
+        return RedirectResponse("/capsules", status_code=303)
+    signature = ",".join(str(x) for x in sorted(ids))
     thumb = None
-    if db_pool:
-        async with db_pool.acquire() as conn:
-            if ids:
-                row = await conn.fetchrow("SELECT file_id FROM wardrobe WHERE id=$1 AND user_id=$2", ids[0], user["id"])
-                if row:
-                    thumb = row['file_id']
-            # сохраняем капсулу с user_id
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT file_id FROM wardrobe WHERE id=$1 AND user_id=$2", ids[0], user["id"])
+        if row:
+            thumb = row["file_id"]
+        try:
             await conn.execute("""
-                INSERT INTO capsules (user_id, name, item_ids, thumbnail_file_id, created_at)
-                VALUES ($1, $2, $3, $4, $5)
-            """, user["id"], name, ids, thumb, datetime.now(timezone.utc))
+                INSERT INTO capsules (user_id, name, item_ids, thumbnail_file_id, signature, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6)
+            """, user["id"], name, ids, thumb, signature, datetime.now(timezone.utc))
+        except Exception as e:
+            print("Capsule save failed (likely duplicate):", str(e))
+            return await render_template(request, "capsules.html", {"capsules": [], "message": "Такая капсула уже существует."})
+
     return RedirectResponse(url="/capsules", status_code=303)
+@app.post("/api/capsules/generate")
+async def api_generate_capsule(request: Request):
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    group_size = int(body.get("group_size", 6))
+    # можно расширить: дать пользователю выбрать включать ли required_categories; сейчас фиксированы
+    if not db_pool:
+        return JSONResponse({"error":"DB not configured"}, status_code=500)
+
+    items, avg_sim, warnings = await generate_capsule_items_for_user(db_pool, user_id=(await get_current_user(request) or {}).get("id", 0),
+                                                                      group_size=group_size, candidates_per_group=120)
+    return JSONResponse({"items": items, "avg_sim": avg_sim, "warnings": warnings})
+
 
 @app.get("/capsules", response_class=HTMLResponse)
 async def view_capsules(request: Request):

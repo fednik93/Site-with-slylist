@@ -1,44 +1,80 @@
 {% extends "base.html" %}
-{% block title %}Вещь — Stylist{% endblock %}
+{% block title %}{{ item.name or "Вещь" }} — Stylist{% endblock %}
+
 {% block content %}
-  <div class="bg-white p-6 rounded shadow flex gap-6">
-    <div class="w-1/3">
-      <img src="{{ file_url }}" class="w-full rounded" alt="{{ item.name }}"/>
+<div class="max-w-4xl mx-auto">
+  <div class="mb-6">
+    <a href="/wardrobe" class="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-teal-600 transition-colors group">
+      <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Назад к гардеробу
+    </a>
+  </div>
+
+  <div class="card-modern bg-white overflow-hidden flex flex-col md:flex-row gap-0 shadow-2xl shadow-slate-200/50">
+    <div class="md:w-1/2 bg-slate-50 flex items-center justify-center p-8 border-r border-slate-100">
+      <div class="relative group aspect-square w-full">
+        <img src="{{ file_url }}"
+             class="w-full h-full object-contain drop-shadow-2xl group-hover:scale-105 transition-transform duration-700"
+             alt="{{ item.name }}"/>
+      </div>
     </div>
-    <div class="flex-1">
-      <h2 class="text-2xl font-bold">
-        {{ item.name or "(без названия)" }}
-      </h2>
-      {% set show_category = item.manual_category_ru if item.manual_category_ru else item.category_ru %}
-      {% set show_color = item.manual_color if item.manual_color else item.color_ru %}
-      <div class="text-gray-600 mt-2">
-        Категория: {{ item.display_category }}
+
+    <div class="flex-1 p-10 flex flex-col">
+      <div class="space-y-1 mb-8">
+        <div class="inline-flex items-center gap-2 px-2 py-1 rounded bg-teal-50 text-teal-600 text-[10px] font-bold uppercase tracking-widest">
+          Детали предмета
+        </div>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          {{ item.name or "(Без названия)" }}
+        </h1>
       </div>
-      <div class="text-gray-600 mt-1">
-        Цвет: {{ item.display_color }}
+
+      <div class="grid grid-cols-1 gap-6 mb-10">
+        <div class="flex items-center justify-between py-3 border-b border-slate-50">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Категория</span>
+          <span class="text-sm font-bold text-slate-700">{{ item.display_category }}</span>
+        </div>
+
+        <div class="flex items-center justify-between py-3 border-b border-slate-50">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Цвет</span>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-slate-700">{{ item.display_color }}</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between py-3 border-b border-slate-50">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Материал</span>
+          <span class="text-sm font-bold text-slate-700">{{ item.manual_material or "Не указан" }}</span>
+        </div>
       </div>
-      <div class="text-gray-600 mt-1">Материал: {{ item.manual_material or "(не указано)" }}</div>
-      <div class="text-gray-500 mt-4 text-sm">
-        Добавлено: {{ item.created_at }}
-      </div>
-      <div class="mt-6 flex gap-4">
-        <a href="/wardrobe/item/{{ item.id }}/edit"
-           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-          Редактировать
-        </a>
-        <form action="/wardrobe/item/{{ item.id }}/delete"
-              method="post"
-              onsubmit="return confirm('Удалить эту вещь?');">
-          <button type="submit"
-                  class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
-            Удалить
-          </button>
-        </form>
-        <a href="/wardrobe"
-           class="self-center text-blue-600">
-          Назад к гардеробу
-        </a>
+
+      <div class="mt-auto pt-6 flex flex-col gap-3">
+        <div class="flex gap-3">
+          <a href="/wardrobe/item/{{ item.id }}/edit"
+             class="flex-1 bg-slate-900 text-white text-center py-4 rounded-xl font-bold text-sm hover:bg-teal-600 transition-all shadow-lg shadow-slate-200">
+            Редактировать
+          </a>
+
+          <form action="/wardrobe/item/{{ item.id }}/delete"
+                method="post"
+                class="inline"
+                onsubmit="return confirm('Удалить эту вещь из гардероба?');">
+            <button type="submit"
+                    class="p-4 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all group">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <p class="text-[10px] text-center text-slate-300 font-medium uppercase tracking-tighter">
+          Добавлено в гардероб: {{ item.created_at.strftime('%d.%m.%Y') if item.created_at else 'Неизвестно' }}
+        </p>
       </div>
     </div>
   </div>
+</div>
 {% endblock %}

@@ -1,86 +1,112 @@
 {% extends "base.html" %}
-{% block title %}Главная — Stylist{% endblock %}
+{% block title %}Главная — Stylist.ai{% endblock %}
 
 {% block content %}
-<!-- HERO -->
-<section class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center mb-12">
-  <div class="space-y-6">
-    <div class="inline-flex items-center gap-3">
-      <div class="px-2 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">MVP</div>
-      <div class="text-xs text-slate-500">Демонстрационная версия</div>
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24 pt-8">
+  <div class="space-y-8">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-100">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+      </span>
+      <span class="text-[10px] font-bold uppercase tracking-widest text-teal-700">MVP Demo v0.1</span>
     </div>
 
-    <h1 class="text-4xl font-extrabold leading-tight text-slate-900">Организуй гардероб. Собирай капсулы. Выглядй лучше.</h1>
+    <h1 class="text-5xl md:text-6xl font-extrabold leading-[1.1] text-slate-900 tracking-tight">
+      Умный гардероб <br/>
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-emerald-600">в твоем кармане.</span>
+    </h1>
 
-    <p class="text-lg text-slate-700 max-w-xl">Загружай фото вещей, редактируй метаданные и автоматически собирай базовые комплекты. Виртуальная примерка — в планах (будет доступна в будущем).</p>
+    <p class="text-lg text-slate-500 max-w-xl leading-relaxed font-medium">
+      Загружай фото вещей, а наш ИИ сам определит стиль и соберет идеальные капсулы. Твой персональный стилист, который всегда под рукой.
+    </p>
 
-    <div class="flex items-center gap-4">
-      <a href="/wardrobe" class="inline-flex items-center gap-2 px-5 py-3 rounded-md bg-[var(--accent)] text-white font-semibold shadow-sm">Открыть гардероб</a>
-
-      <button class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white border text-slate-700" disabled aria-disabled="true">
+    <div class="flex flex-wrap items-center gap-4">
+      <a href="/wardrobe" class="px-8 py-4 rounded-full bg-slate-900 text-white font-bold shadow-2xl shadow-slate-900/20 hover:bg-black hover:-translate-y-1 transition-all duration-300">
+        Открыть гардероб
+      </a>
+      <div class="px-6 py-4 rounded-full bg-white text-slate-400 font-bold border border-slate-100 cursor-not-allowed text-sm">
         Примерка — скоро
-      </button>
+      </div>
     </div>
 
-    <div class="mt-4 text-sm text-slate-600 max-w-prose">
-      <strong>Совет:</strong> загрузи 6–10 предметов — так капсулы будут выглядеть осмысленнее.
+    <div class="flex items-center gap-3 p-4 rounded-2xl bg-amber-50/50 border border-amber-100 max-w-md">
+      <span class="text-xl">💡</span>
+      <p class="text-xs text-amber-800 leading-tight">
+        <span class="font-bold">Совет:</span> загрузи 6–10 предметов — так алгоритм генерации капсул сработает максимально точно.
+      </p>
     </div>
   </div>
 
-  <div class="card p-6 rounded-2xl">
-    <div class="flex items-center justify-between">
-      <div>
-        <div class="text-sm text-slate-600">Текущие фичи</div>
-        <h3 class="text-xl font-semibold text-slate-900">Что умеет Stylist</h3>
-      </div>
-      <div class="text-xs text-slate-500">v0.1</div>
-    </div>
+  <div class="card-modern p-8 md:p-10 relative overflow-hidden group">
+    <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700"></div>
 
-    <div class="mt-6 space-y-4">
-      <div class="flex gap-4 items-start">
-        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-700 font-semibold">1</div>
-        <div>
-          <div class="font-medium text-slate-800">Добавление вещей</div>
-          <div class="text-sm text-slate-600">Загружай фото — система анализирует цвет/категорию, но ты можешь править.</div>
+    <div class="relative z-10">
+      <div class="flex items-center justify-between mb-8">
+        <h3 class="text-xl font-800 text-slate-900">Что умеет Stylist</h3>
+        <span class="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase">Features</span>
+      </div>
+
+      <div class="space-y-8">
+        <div class="flex gap-5 items-start">
+          <div class="w-12 h-12 shrink-0 rounded-2xl bg-teal-500 text-white flex items-center justify-center font-bold shadow-lg shadow-teal-500/30">1</div>
+          <div>
+            <div class="font-bold text-slate-800">Добавление вещей</div>
+            <div class="text-sm text-slate-500 mt-1 leading-relaxed">Система анализирует фото, убирает фон и определяет категорию.</div>
+          </div>
+        </div>
+
+        <div class="flex gap-5 items-start">
+          <div class="w-12 h-12 shrink-0 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold">2</div>
+          <div>
+            <div class="font-bold text-slate-800">Генерация капсул</div>
+            <div class="text-sm text-slate-500 mt-1 leading-relaxed">Алгоритм подбирает математически выверенные сочетания из твоих вещей.</div>
+          </div>
+        </div>
+
+        <div class="flex gap-5 items-start">
+          <div class="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center font-bold">3</div>
+          <div>
+            <div class="font-bold text-slate-800">Редактирование</div>
+            <div class="text-sm text-slate-500 mt-1 leading-relaxed">Полный контроль: меняй метаданные, если ИИ где-то ошибся.</div>
+          </div>
         </div>
       </div>
 
-      <div class="flex gap-4 items-start">
-        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-700 font-semibold">2</div>
-        <div>
-          <div class="font-medium text-slate-800">Генерация капсул</div>
-          <div class="text-sm text-slate-600">Алгоритм подбирает сочетания из твоего гардероба для презентации.</div>
+      <div class="mt-10 pt-6 border-t border-slate-50 flex justify-between items-center">
+        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">В разработке: виртуальная примерка</span>
+        <div class="flex -space-x-2">
+            <div class="w-6 h-6 rounded-full bg-teal-200 border-2 border-white"></div>
+            <div class="w-6 h-6 rounded-full bg-emerald-200 border-2 border-white"></div>
         </div>
       </div>
-
-      <div class="flex gap-4 items-start">
-        <div class="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-700 font-semibold">3</div>
-        <div>
-          <div class="font-medium text-slate-800">Редактирование</div>
-          <div class="text-sm text-slate-600">Подправь категорию или цвет, если модель ошиблась.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-6 text-sm text-slate-600">
-      <strong>В разработке:</strong> виртуальная примерка и экспорт капсул.
     </div>
   </div>
 </section>
 
-<!-- FEATURES -->
-<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  <div class="card p-6">
-    <h4 class="font-semibold text-slate-900 mb-2">Простой поток</h4>
-    <p class="text-sm text-slate-600">Зарегистрируйся → добавь вещи → сгенерируй капсулу.</p>
+<section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+  <div class="card-modern p-8 hover:border-teal-200">
+    <div class="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center mb-6 text-teal-600">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h4 class="font-bold text-slate-900 mb-3">Простой поток</h4>
+    <p class="text-sm text-slate-500 leading-relaxed">Зарегистрируйся, добавь пару фото и получи первый образ уже через минуту.</p>
   </div>
-  <div class="card p-6">
-    <h4 class="font-semibold text-slate-900 mb-2">Контроль</h4>
-    <p class="text-sm text-slate-600">Исправляй ошибки распознавания вручную — это улучшит результаты.</p>
+
+  <div class="card-modern p-8 hover:border-teal-200">
+    <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-6 text-blue-600">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h4 class="font-bold text-slate-900 mb-3">Контроль данных</h4>
+    <p class="text-sm text-slate-500 leading-relaxed">Твой гардероб — твои правила. Исправляй теги ИИ, чтобы сделать подборки точнее.</p>
   </div>
-  <div class="card p-6">
-    <h4 class="font-semibold text-slate-900 mb-2">Готовность к ML</h4>
-    <p class="text-sm text-slate-600">Планируем интеграцию с ML-сервисами для примерки и улучшения качества метаданных.</p>
+
+  <div class="card-modern p-8 hover:border-teal-200">
+    <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-6 text-purple-600">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h4 class="font-bold text-slate-900 mb-3">Ready for ML</h4>
+    <p class="text-sm text-slate-500 leading-relaxed">Мы готовим интеграцию с мощными нейросетями для генерации фото на аватаре.</p>
   </div>
 </section>
 {% endblock %}

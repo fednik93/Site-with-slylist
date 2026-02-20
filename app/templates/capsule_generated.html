@@ -1,28 +1,112 @@
 {% extends "base.html" %}
-{% block title %}Сгенерированная капсула{% endblock %}
+{% block title %}Генерация капсулы — Stylist{% endblock %}
+
 {% block content %}
-  <div class="bg-white p-6 rounded shadow">
-    <h2 class="text-xl font-semibold mb-4">Сгенерированная капсула — средняя схожесть {{ avg_sim | round(2) }}</h2>
+<div class="max-w-5xl mx-auto">
 
-    <div class="grid grid-cols-3 gap-4 mb-4">
-      {% for it in items %}
-        <div class="bg-gray-50 p-3 rounded">
-          {% if it.file_name %}
-            <img src="/static/uploads/{{ it.file_id }}" class="w-full h-36 object-cover rounded mb-2"/>
-          {% else %}
-            <div class="w-full h-36 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-400">No image</div>
-          {% endif %}
-          <div class="font-medium">{{ it.name or "(без названия)" }}</div>
-          <div class="text-sm text-gray-500">{{ it.color_ru or "" }} • {{ it.category_en or it.category_ru or "" }}</div>
-        </div>
-      {% endfor %}
+  <div class="mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
+  <div class="flex items-center gap-4">
+    <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center border border-teal-100">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.642.257a6 6 0 01-3.86.517l-2.387-.477a2 2 0 00-1.022.547l-1.16 1.16a2 2 0 001.414 3.414h15.414a2 2 0 001.414-3.414l-1.16-1.16z" stroke-width="2"/></svg>
     </div>
-
-    <form action="/capsules/save" method="post" class="flex gap-3 items-center">
-      <input type="text" name="name" placeholder="Имя капсулы" class="border p-2 rounded" required/>
-      <input type="hidden" name="item_ids" value="{{ items | map(attribute='id') | join(',') }}"/>
-      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Сохранить капсулу</button>
-      <a href="/capsules" class="text-gray-500 ml-3">Отмена</a>
-    </form>
+    <div>
+      <h1 class="text-2xl font-800 text-slate-900 tracking-tight">Новый образ</h1>
+      <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Сгенерировано ИИ</p>
+    </div>
   </div>
+
+  <div class="flex items-center gap-1 p-1.5 bg-white rounded-2xl border border-slate-100 shadow-sm">
+      <div class="pl-4 pr-2 py-2 flex items-center gap-3 border-r border-slate-50">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-tight">Вещей в образе:</span>
+          </div>
+
+          <div class="relative flex items-center">
+            <select id="groupSize" class="appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg pl-3 pr-8 py-1.5 text-sm font-extrabold text-teal-600 focus:outline-none cursor-pointer transition-colors">
+                {% for i in range(3, 9) %}
+                <option value="{{ i }}" {% if group_size == i %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+            </select>
+            <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+      </div>
+
+      <form action="/capsules/generate" method="post" id="regenForm">
+          <input type="hidden" name="group_size" id="hiddenGroupSize" value="{{ group_size }}">
+          <button type="submit" id="regenerateBtn" class="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-teal-600 transition-all flex items-center gap-2 group">
+              <svg class="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Перегенерировать
+          </button>
+      </form>
+  </div>
+</div>
+
+<script>
+// Синхронизируем значение из красивого селектора с невидимым полем формы
+document.getElementById('groupSize').addEventListener('change', function() {
+    document.getElementById('hiddenGroupSize').value = this.value;
+});
+
+// Добавляем лоадер на кнопку при отправке
+document.getElementById('regenForm').addEventListener('submit', function() {
+    const btn = document.getElementById('regenerateBtn');
+    btn.innerHTML = 'Генерируем...';
+    btn.classList.add('opacity-50', 'pointer-events-none');
+});
+</script>
+
+  <div id="preview-area" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12 min-h-[400px] items-start">
+  {% if items %}
+    {% for it in items %}
+      <div class="card-modern bg-white overflow-hidden group border border-slate-50 transition-all hover:shadow-lg max-w-[280px] w-full justify-self-center lg:justify-self-start">
+
+        <div class="aspect-square bg-slate-50 p-6 relative overflow-hidden flex items-center justify-center">
+          <img src="{{ it.file_path }}"
+               class="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-700"
+               alt="{{ it.name }}">
+        </div>
+
+        <div class="p-4 border-t border-slate-50">
+          <div class="font-bold text-slate-900 text-sm truncate">{{ it.name or it.category_ru }}</div>
+          <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-1">{{ it.color_ru or 'Базовый цвет' }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-300">
+      <p class="font-bold uppercase tracking-widest text-xs">Нет подходящих вещей</p>
+    </div>
+  {% endif %}
+</div>
+
+  <div class="sticky bottom-8 z-20">
+      <div class="card-modern p-4 bg-white/80 backdrop-blur-xl border border-white shadow-2xl shadow-slate-200/50">
+          <form id="saveForm" action="/capsules/save" method="post" class="flex flex-col md:flex-row gap-4">
+              <input type="hidden" name="item_ids" id="itemIdsInput" value="{{ items|map(attribute='id')|join(',') }}">
+              <input type="text" name="name" required placeholder="Назовите образ..."
+                     class="flex-1 bg-white border border-slate-100 rounded-xl px-5 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all font-medium">
+              <button type="submit" class="px-8 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl transition-all whitespace-nowrap">
+                  Сохранить капсулу
+              </button>
+          </form>
+      </div>
+  </div>
+
+</div>
+
+<script>
+// Теперь скрипт только для кнопки "Обновить", он не ломает верстку при загрузке
+document.getElementById('regenerateBtn')?.addEventListener('click', () => {
+    const size = document.getElementById('groupSize').value;
+    // Просто перезагружаем страницу с новым параметром — это самый чистый способ без "прыжков" JS
+    window.location.href = `/capsules/generate?group_size=` + size;
+});
+</script>
 {% endblock %}

@@ -1,22 +1,84 @@
 {% extends "base.html" %}
+{% block title %}Редактирование — {{ item.name or 'Вещь' }}{% endblock %}
+
 {% block content %}
-<div class="bg-white p-6 rounded shadow max-w-lg mx-auto">
-  <h2 class="text-xl font-semibold mb-4">Редактировать вещь</h2>
-  <form action="/wardrobe/item/{{ item.id }}/edit" method="post" class="space-y-3">
-    <label>Имя</label>
-    <input type="text" name="name" value="{{ item.name }}" class="w-full p-2 border rounded"/>
-    <label>Категория (ручная)</label>
-    <input type="text" name="manual_category_ru" value="{{ item.manual_category_ru or item.category_ru }}" class="w-full p-2 border rounded"/>
-    <label>Категория (en)</label>
-    <input type="text" name="manual_category_en" value="{{ item.category_en }}" class="w-full p-2 border rounded"/>
-    <label>Цвет</label>
-    <input type="text" name="manual_color" value="{{ item.manual_color or item.color_ru }}" class="w-full p-2 border rounded"/>
-    <label class="text-sm block mb-1">Материал</label>
-    <input type="text" name="manual_material" value="{{ item.manual_material or '' }}" class="w-full border rounded p-2 text-sm" />
-    <div class="flex gap-3">
-      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Сохранить</button>
-      <a href="/wardrobe/item/{{ item.id }}" class="text-gray-600 self-center">Отмена</a>
+<div class="max-w-4xl mx-auto">
+  <a href="/wardrobe" class="inline-flex items-center text-sm text-slate-500 hover:text-teal-600 mb-6 transition-colors">
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Назад в гардероб
+  </a>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+    <div class="card-modern overflow-hidden bg-white flex items-center justify-center p-8 aspect-square md:aspect-auto md:h-[500px]">
+      <img src="/static/uploads/{{ item.file_id }}"
+           class="max-w-full max-h-full object-contain shadow-2xl shadow-black/5 rounded-lg"
+           alt="Preview">
     </div>
-  </form>
+
+    <div class="card-modern bg-white p-8">
+      <h2 class="text-2xl font-bold text-slate-900 mb-6">Параметры вещи</h2>
+
+      <form action="/wardrobe/item/{{ item.id }}/edit" method="post" class="space-y-5">
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Название</label>
+          <input type="text" name="name" value="{{ item.name or '' }}"
+                 placeholder="Напр: Белая оверсайз футболка"
+                 class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 outline-none transition-all text-sm"/>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Категория (RU)</label>
+            <input type="text" name="manual_category_ru" value="{{ item.manual_category_ru or item.category_ru }}"
+                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none transition-all text-sm"/>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category (EN)</label>
+            <input type="text" name="manual_category_en" value="{{ item.category_en }}"
+                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none transition-all text-sm text-slate-400 bg-slate-50/50"/>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Цвет</label>
+            <div class="relative">
+              <input type="text" name="manual_color" value="{{ item.manual_color or item.color_ru }}"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none transition-all text-sm pl-10"/>
+              <div class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border border-slate-200"
+                   style="background-color: {{ item.color_en }}"></div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Материал</label>
+            <input type="text" name="manual_material" value="{{ item.manual_material or '' }}"
+                   placeholder="Хлопок, Шелк..."
+                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none transition-all text-sm"/>
+          </div>
+        </div>
+
+        <div class="pt-6 flex items-center gap-4">
+          <button type="submit"
+                  class="flex-1 bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-black transition-all shadow-xl shadow-black/10 active:scale-[0.98]">
+            Сохранить изменения
+          </button>
+          <a href="/wardrobe"
+             class="px-6 py-4 rounded-2xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all">
+            Отмена
+          </a>
+        </div>
+      </form>
+
+      <div class="mt-12 pt-6 border-t border-slate-100">
+        <form action="/wardrobe/item/{{ item.id }}/delete" method="post" onsubmit="return confirm('Удалить эту вещь навсегда?')">
+          <button type="submit" class="text-xs font-bold text-rose-400 hover:text-rose-600 transition-colors uppercase tracking-widest">
+            Удалить вещь
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
