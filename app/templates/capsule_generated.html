@@ -74,8 +74,17 @@ document.getElementById('regenForm').addEventListener('submit', function() {
         </div>
 
         <div class="p-4 border-t border-slate-50">
-          <div class="font-bold text-slate-900 text-sm truncate">{{ it.name or it.category_ru }}</div>
-          <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-1">{{ it.color_ru or 'Базовый цвет' }}</div>
+            <div class="font-bold text-slate-900 text-sm truncate">
+            {{ it.name or it.manual_category_ru or it.category_ru or 'Вещь' }}
+          </div>
+
+          <div class="text-[10px] text-teal-600 uppercase font-extrabold tracking-wider mt-1">
+            {% if it.manual_color and it.manual_color.strip() %}
+              {{ it.manual_color }}
+            {% else %}
+              {{ it.color_ru or 'Базовый цвет' }}
+            {% endif %}
+          </div>
         </div>
       </div>
     {% endfor %}

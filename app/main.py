@@ -30,7 +30,6 @@ app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 # DB pool (None if not configured)
 db_pool: Optional[asyncpg.pool.Pool] = None
 DATABASE_URL = os.getenv("DATABASE_URL")  # установить в окружении если хочешь БД
-from typing import Optional
 
 def get_current_user_id(request: Request) -> Optional[int]:
     return request.session.get("user_id")
@@ -192,6 +191,7 @@ async def logout(request: Request):
 # ---------------- Wardrobe ----------------
 @app.get("/wardrobe", response_class=HTMLResponse)
 async def view_wardrobe(request: Request):
+    categories = []
     user = await get_current_user(request)
     if not user:
         return RedirectResponse("/login")
@@ -428,14 +428,25 @@ async def delete_item(request: Request, item_id: int):
         """)
 
     return RedirectResponse("/wardrobe", status_code=303)
-
+RU_TO_EN_COLOR = {
+    "белый": "white", "чёрный": "black", "черный": "black", "серый": "gray", "красный": "red",
+    "оранжевый": "orange", "жёлтый": "yellow", "зелёный": "green", "синий": "blue", "голубой": "azure",
+    "фиолетовый": "purple", "розовый": "pink", "коричневый": "brown", "бежевый": "beige",
+    "бордовый": "maroon", "оливковый": "olive"
+}
 @app.get("/wardrobe/item/{item_id}/edit", response_class=HTMLResponse)
 async def edit_item_get(request: Request, item_id: int):
     user = await get_current_user(request)
     if not user:
         return RedirectResponse("/login")
     async with db_pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT id, file_id, name, color_ru, category_ru, category_en, manual_category_ru, manual_color FROM wardrobe WHERE id=$1 AND user_id=$2", item_id, user["id"])
+        # Добавил выборку color_en и manual_material, чтобы форма была полной
+        row = await conn.fetchrow("""
+            SELECT id, file_id, name, color_ru, color_en, category_ru, category_en, 
+                   manual_category_ru, manual_color, manual_material 
+            FROM wardrobe WHERE id=$1 AND user_id=$2
+        """, item_id, user["id"])
+
         if not row:
             raise HTTPException(status_code=404)
     item = dict(row)
@@ -452,24 +463,32 @@ async def edit_item_post(request: Request, item_id: int,
     if not user:
         return RedirectResponse("/login")
     async with db_pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT id FROM wardrobe WHERE id=$1 AND user_id=$2", item_id, user["id"])
+        row = await conn.fetchrow("SELECT color_en FROM wardrobe WHERE id=$1 AND user_id=$2", item_id, user["id"])
         if not row:
             raise HTTPException(status_code=404)
+
+        current_color_en = row['color_en']
+        if manual_color:
+            val = manual_color.strip().lower()
+            if val in RU_TO_EN_COLOR:
+                current_color_en = RU_TO_EN_COLOR[val]
+
         await conn.execute("""
             UPDATE wardrobe
             SET name=$1,
                 manual_category_en=$2,
                 manual_category_ru=$3,
                 manual_color=$4,
-                manual_material=$5
-            WHERE id=$6
-        """, name, manual_category_en, manual_category_ru, manual_color, manual_material, item_id)
-        # сохраняем в corrections для обучения
+                manual_material=$5,
+                color_en=$6
+            WHERE id=$7 AND user_id=$8
+        """, name, manual_category_en, manual_category_ru, manual_color, manual_material, current_color_en, item_id,
+                           user["id"])
         await conn.execute("""
             INSERT INTO label_corrections (wardrobe_id, user_id, corrected_category_en, corrected_category_ru, corrected_color)
             VALUES ($1, $2, $3, $4, $5)
         """, item_id, user["id"], manual_category_en, manual_category_ru, manual_color)
-    return RedirectResponse(f"/wardrobe/item/{item_id}", status_code=303)
+    return RedirectResponse("/wardrobe", status_code=303)
 
 
 # ---------------- Capsules ----------------
@@ -517,42 +536,79 @@ async def view_capsule(request: Request, cap_id: int):
     if not user:
         return RedirectResponse("/login")
 
-    if not db_pool:
-        raise HTTPException(status_code=500)
-
     async with db_pool.acquire() as conn:
         cap_row = await conn.fetchrow(
             "SELECT id, name, item_ids, created_at FROM capsules WHERE id=$1 AND user_id=$2",
-            cap_id,
-            user["id"]
+            cap_id, user["id"]
         )
-
         if not cap_row:
             raise HTTPException(status_code=404)
 
         cap = dict(cap_row)
+        clothing = []
+        accessories = []
 
-        items = []
         if cap.get("item_ids"):
-            rows = await conn.fetch(
-                "SELECT id, name, file_id, color_ru, category_ru FROM wardrobe WHERE id = ANY($1)",
-                cap["item_ids"]
-            )
+            # Тянем все нужные поля, включая категории для сортировки
+            rows = await conn.fetch("""
+                SELECT id, name, file_id, color_ru, manual_color, category_ru, category_en, manual_category_en 
+                FROM wardrobe 
+                WHERE id = ANY($1)
+            """, cap["item_ids"])
+
+            # Импортируем группы из твоего core.py
+            from app.core import CATEGORY_GROUPS
+
+            # Определяем приоритет (чем меньше число, тем выше вещь)
+            rank_map = {
+                "outer": 1,  # Верхняя одежда
+                "tops": 2,  # Футболки, рубашки
+                "dresses": 3,  # Платья
+                "bottoms": 4,  # Брюки, юбки
+                "shoes": 5,  # Обувь
+            }
 
             for r in rows:
                 it = dict(r)
                 it["file_path"] = f"/static/uploads/{it['file_id']}" if it.get("file_id") else None
-                items.append(it)
+
+                # Определяем, к какой группе относится вещь (смотрим в core.py)
+                cat_en = it.get("manual_category_en") or it.get("category_en") or ""
+                item_group = "other"
+
+                for group_name, group_data in CATEGORY_GROUPS.items():
+                    if group_data["items"] and cat_en in group_data["items"]:
+                        item_group = group_name
+                        break
+
+                if item_group == "accessories":
+                    accessories.append(it)
+                else:
+                    it["_rank"] = rank_map.get(item_group, 99)
+                    clothing.append(it)
+
+            # Сортируем основную одежду по рангу (от 1 до 5)
+            clothing.sort(key=lambda x: x["_rank"])
 
     return templates.TemplateResponse(
         "capsule_view.html",
         {
             "request": request,
             "cap": cap,
-            "items": items
+            "items": clothing,  # Основная одежда (отсортированная)
+            "accessories": accessories  # Аксессуары отдельно
         }
     )
-@app.post("/capsules/{cap_id}/delete")
+@app.post("/capsules/edit/{cap_id}")
+async def edit_capsule_name(cap_id: int, new_name: str = Form(...)):
+    if db_pool:
+        async with db_pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE capsules SET name = $1 WHERE id = $2",
+                new_name, cap_id
+            )
+    return RedirectResponse(url=f"/capsules/view/{cap_id}", status_code=303)
+@app.post("/capsules/delete/{cap_id}")
 async def delete_capsule(request: Request, cap_id: int):
     user = await get_current_user(request)
     if not user:

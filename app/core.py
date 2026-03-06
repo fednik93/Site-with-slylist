@@ -12,9 +12,7 @@ from PIL import Image
 try:
     from rembg import remove as rembg_remove, new_session
     _HAS_REMBG = True
-    # Создаем сессию один раз глобально, чтобы не грузить её при каждом фото
-    # u2net_cloth_seg — модель для сегментации одежды
-    cloth_session = new_session("u2net_cloth_seg")
+    cloth_session = new_session("u2net")
 except Exception as e:
     print(f"Ошибка инициализации rembg: {e}")
     _HAS_REMBG = False
@@ -304,8 +302,11 @@ async def generate_capsule_items_for_user(pool, user_id:int = 0,
             "color_ru": s.get("color_ru"),
             "manual_color": s.get("manual_color"),
             "manual_material": s.get("manual_material"),
+            # ДОБАВЛЯЕМ ЭТИ СТРОКИ:
+            "category_ru": s.get("category_ru") or s.get("category_norm"),
+            "manual_category_ru": s.get("manual_category_ru"),
             "file_path": f"/static/uploads/{s['file_id']}" if s.get("file_id") else None
-        } for s in final_selected]
+        } for s in final_selected]  # (или final_selected в первом блоке)
         return out_items, float(avg_pair_sim), warnings
 
     # теперь greedy-дополнение до group_size (с несколькими попытками)
@@ -366,8 +367,11 @@ async def generate_capsule_items_for_user(pool, user_id:int = 0,
             "color_ru": s.get("color_ru"),
             "manual_color": s.get("manual_color"),
             "manual_material": s.get("manual_material"),
+            # ДОБАВЛЯЕМ ЭТИ СТРОКИ:
+            "category_ru": s.get("category_ru") or s.get("category_norm"),
+            "manual_category_ru": s.get("manual_category_ru"),
             "file_path": f"/static/uploads/{s['file_id']}" if s.get("file_id") else None
-        } for s in selected]
+        } for s in selected]  # (или final_selected в первом блоке)
 
         return out_items, float(avg_pair_sim), warnings
 
@@ -384,8 +388,11 @@ async def generate_capsule_items_for_user(pool, user_id:int = 0,
         "color_ru": s.get("color_ru"),
         "manual_color": s.get("manual_color"),
         "manual_material": s.get("manual_material"),
+        # ДОБАВЛЯЕМ ЭТИ СТРОКИ:
+        "category_ru": s.get("category_ru") or s.get("category_norm"),
+        "manual_category_ru": s.get("manual_category_ru"),
         "file_path": f"/static/uploads/{s['file_id']}" if s.get("file_id") else None
-    } for s in selected]
+    } for s in selected]  # (или final_selected в первом блоке)
     return out_items, float(avg_pair_sim), warnings
 
 
@@ -442,9 +449,16 @@ except Exception:
 
 def remove_bg_rembg(input_bytes: bytes) -> bytes:
     if not _HAS_REMBG or cloth_session is None:
-        raise RuntimeError("rembg или модель u2net_cloth_seg не доступны")
+        raise RuntimeError("rembg или модель u2net не доступны")
     try:
-        out_bytes = rembg_remove(input_bytes, session=cloth_session)
+        out_bytes = rembg_remove(
+            input_bytes,
+            session=cloth_session,
+            alpha_matting=True,
+            alpha_matting_foreground_threshold=240,
+            alpha_matting_background_threshold=10,
+            alpha_matting_erode_size=10
+        )
         return out_bytes
     except Exception as e:
         print(f"Ошибка при обработке фото в rembg: {e}")

@@ -5,11 +5,41 @@
 <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
   <div class="space-y-2">
     <div class="inline-flex items-center gap-2 px-2 py-1 rounded bg-teal-50 text-teal-600 text-[10px] font-bold uppercase tracking-wider">
-      Сохраненный образ
+      Сохраненная капсула
     </div>
-    <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">{{ cap.name }}</h1>
+
+    <div id="name-display" class="flex items-center gap-4">
+      <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">{{ cap.name }}</h1>
+      <button onclick="toggleEdit()" class="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-all" title="Редактировать название">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="name-edit-form" method="post" action="/capsules/edit/{{ cap.id }}" class="hidden flex items-center gap-2">
+      <input
+        type="text"
+        name="new_name"
+        value="{{ cap.name }}"
+        class="text-2xl font-bold px-3 py-1 border-2 border-teal-500 rounded-xl focus:outline-none focus:ring-4 focus:ring-teal-500/10 text-slate-900"
+        required
+      >
+      <button type="submit" class="px-4 py-2 bg-teal-500 text-white rounded-lg font-bold text-sm hover:bg-teal-600 transition-colors">Ок</button>
+      <button type="button" onclick="toggleEdit()" class="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg font-bold text-sm hover:bg-slate-200">Отмена</button>
+    </form>
+
     <p class="text-sm text-slate-400 font-medium">Создано: {{ cap.created_at.strftime('%d.%m.%Y') }} • {{ items|length }} предмета</p>
   </div>
+
+  <script>
+  function toggleEdit() {
+      const display = document.getElementById('name-display');
+      const form = document.getElementById('name-edit-form');
+      display.classList.toggle('hidden');
+      form.classList.toggle('hidden');
+  }
+  </script>
 
   <div class="flex gap-3">
      <form method="post" action="/capsules/delete/{{ cap.id }}" onsubmit="return confirm('Удалить капсулу?')">
@@ -38,10 +68,9 @@
           <div class="flex justify-between items-start mb-4">
             <div>
               <h3 class="font-bold text-slate-900">{{ it.name or it.category_ru }}</h3>
-              <p class="text-xs text-slate-400 font-medium uppercase tracking-tighter mt-1">{{ it.color_ru or 'Цвет не указан' }}</p>
+              <p class="text-xs text-slate-400 font-medium uppercase tracking-tighter mt-1">{{ it.manual_color if it.manual_color else (it.color_ru or 'Цвет не указан') }}</p>
             </div>
           </div>
-
           <div class="flex gap-2">
             <a href="/wardrobe/item/{{ it.id }}/edit" class="flex-1 py-2 rounded-lg bg-slate-50 text-slate-600 text-xs font-bold text-center hover:bg-slate-100 transition-colors">
               Изменить

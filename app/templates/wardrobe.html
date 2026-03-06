@@ -53,11 +53,13 @@
         <label class="block text-xs font-bold uppercase tracking-[0.1em] text-slate-400 mb-2 ml-1">Фотография</label>
         <div class="relative flex items-center justify-center w-full">
           <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 rounded-3xl cursor-pointer bg-slate-50/50 hover:bg-teal-50/30 hover:border-teal-300 transition-all duration-300 group">
-            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-              <svg class="w-8 h-8 mb-2 text-slate-400 group-hover:text-teal-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <p class="text-xs text-slate-500 font-medium">Кликните для выбора файла</p>
+            <div class="flex flex-col items-center justify-center pt-5 pb-6" id="dropzone-content">
+              <svg id="dropzone-icon" class="w-8 h-8 mb-2 text-slate-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p id="file-name-display" class="text-xs text-slate-500 font-medium">Кликните для выбора файла</p>
             </div>
-            <input type="file" name="file" accept="image/*" required class="hidden" />
+            <input type="file" id="file-input" name="file" accept="image/*" required class="hidden" />
           </label>
         </div>
       </div>
@@ -423,5 +425,41 @@ document.getElementById('close-filters-btn')?.addEventListener('click', () => {
 document.getElementById('mobile-filters-backdrop')?.addEventListener('click', () => {
   document.getElementById('mobile-filters').classList.add('hidden');
 });
+</script>
+<script>
+  // --- 1. ЛОГИКА ВЫБОРА ФАЙЛА ---
+  const fileInput = document.getElementById('file-input');
+  const fileNameDisplay = document.getElementById('file-name-display');
+  const dropzoneIcon = document.getElementById('dropzone-icon');
+
+  fileInput?.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      const fileName = this.files[0].name;
+      // Меняем текст на имя файла
+      fileNameDisplay.textContent = "Выбрано: " + fileName;
+      fileNameDisplay.classList.add('text-teal-600', 'font-bold');
+      // Красим иконку в зеленый, чтобы было видно успех
+      dropzoneIcon.classList.replace('text-slate-400', 'text-teal-500');
+    }
+  });
+
+  // --- 2. ЛОГИКА ОТПРАВКИ ФОРМЫ (СПИННЕР) ---
+  const addForm = document.getElementById('add-item-form');
+  addForm?.addEventListener('submit', function(e) {
+    const btn = this.querySelector('button[type="submit"]');
+
+    // Блокируем кнопку, чтобы не жали сто раз
+    btn.disabled = true;
+    btn.classList.add('opacity-70', 'cursor-wait');
+
+    // Рисуем крутилку и текст
+    btn.innerHTML = `
+      <svg class="animate-spin h-5 w-5 mr-3 inline-block text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      ИИ обрабатывает фото...
+    `;
+  });
 </script>
 {% endblock %}
