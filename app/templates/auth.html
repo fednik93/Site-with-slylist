@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Вход и Регистрация — Stylist{% endblock %}
+
+{% block content %}
+<style>
+    /* Тот самый хак для Chrome */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #4C2F27;
+        -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
+    .auth-bg {
+        background-image: url('/static/img/auth-bg.jpg'); /* Твоя картинка */
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    /* Анимация переключения */
+    .form-transition {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+</style>
+
+<div class="min-h-screen auth-bg flex items-center justify-center px-6 py-12 pb-40 relative">
+    <div class="absolute inset-0 bg-[#4C2F27]/80 backdrop-blur-[2px]"></div>
+
+    <div class="relative w-full max-w-[460px]">
+
+        <div class="flex bg-white/60 backdrop-blur-xl p-1.5 rounded-full mb-8 border border-white/20 shadow-xl">
+            <button id="tab-login" class="flex-1 py-3.5 text-center rounded-full text-[10px] uppercase tracking-[0.2em] font-bold transition-all bg-white text-[#4C2F27] shadow-sm">
+                Вход
+            </button>
+            <button id="tab-register" class="flex-1 py-3.5 text-center rounded-full text-[10px] uppercase tracking-[0.2em] font-bold transition-all text-[#4C2F27]/40 hover:text-[#4C2F27]">
+                Регистрация
+            </button>
+        </div>
+
+        <div class="bg-white rounded-[3.5rem] p-12 md:p-14 shadow-[0_40px_100px_rgba(0,0,0,0.25)] relative overflow-hidden">
+
+            {% if error %}
+            <div id="error-msg" class="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 animate-shake">
+                <p class="text-[12px] text-red-800 font-medium">{{ error }}</p>
+            </div>
+            {% endif %}
+
+            <div id="login-form" class="form-transition opacity-100 translate-y-0">
+                <div class="text-center mb-10">
+                    <h2 class="text-[32px] font-forum text-[#4C2F27] leading-tight mb-2">С возвращением</h2>
+                    <div class="w-8 h-[1px] bg-[#4C2F27]/20 mx-auto"></div>
+                </div>
+
+                <form action="/login" method="post" class="space-y-8">
+                    <div class="group">
+                        <label class="text-[9px] uppercase tracking-[0.2em] text-[#4C2F27]/40 font-bold ml-1">Почта</label>
+                        <input type="email" name="email" required placeholder="email@example.com"
+                               class="w-full bg-transparent border-b border-[#4C2F27]/10 py-3 text-[#4C2F27] outline-none focus:border-[#4C2F27] transition-all placeholder:text-[#4C2F27]/10 font-forum text-lg">
+                    </div>
+                    <div class="group">
+                        <label class="text-[9px] uppercase tracking-[0.2em] text-[#4C2F27]/40 font-bold ml-1">Пароль</label>
+                        <input type="password" name="password" required placeholder="••••••••"
+                               class="w-full bg-transparent border-b border-[#4C2F27]/10 py-3 text-[#4C2F27] outline-none focus:border-[#4C2F27] transition-all placeholder:text-[#4C2F27]/10 font-forum text-lg">
+                    </div>
+                    <button type="submit" class="w-full py-5 bg-[#4C2F27] text-[#E8E2DF] rounded-full uppercase text-[10px] font-bold tracking-[0.3em] hover:brightness-125 transition-all shadow-xl">
+                        Войти
+                    </button>
+                </form>
+            </div>
+
+            <div id="register-form" class="form-transition hidden opacity-0 translate-y-4">
+                <div class="text-center mb-10">
+                    <h2 class="text-[32px] font-forum text-[#4C2F27] leading-tight mb-2">Новый профиль</h2>
+                    <div class="w-8 h-[1px] bg-[#4C2F27]/20 mx-auto"></div>
+                </div>
+
+                <form action="/register" method="post" class="space-y-8">
+                    <div class="group">
+                        <label class="text-[9px] uppercase tracking-[0.2em] text-[#4C2F27]/40 font-bold ml-1">Электронная почта</label>
+                        <input type="email" name="email" required placeholder="example@mail.com"
+                               class="w-full bg-transparent border-b border-[#4C2F27]/10 py-3 text-[#4C2F27] outline-none focus:border-[#4C2F27] transition-all placeholder:text-[#4C2F27]/10 font-forum text-lg">
+                    </div>
+                    <div class="group">
+                        <label class="text-[9px] uppercase tracking-[0.2em] text-[#4C2F27]/40 font-bold ml-1">Придумайте пароль</label>
+                        <input type="password" name="password" required placeholder="Минимум 8 знаков"
+                               class="w-full bg-transparent border-b border-[#4C2F27]/10 py-3 text-[#4C2F27] outline-none focus:border-[#4C2F27] transition-all placeholder:text-[#4C2F27]/10 font-forum text-lg">
+                    </div>
+                    <button type="submit" class="w-full py-5 bg-[#4C2F27] text-[#E8E2DF] rounded-full uppercase text-[10px] font-bold tracking-[0.3em] hover:brightness-125 transition-all shadow-xl">
+                        Создать аккаунт
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const btnLogin = document.getElementById('tab-login');
+    const btnRegister = document.getElementById('tab-register');
+    const formLogin = document.getElementById('login-form');
+    const formRegister = document.getElementById('register-form');
+    const errorMsg = document.getElementById('error-msg');
+
+    function showRegister() {
+        // Меняем кнопки
+        btnRegister.classList.add('bg-white', 'text-[#4C2F27]', 'shadow-sm');
+        btnRegister.classList.remove('text-[#4C2F27]/40');
+        btnLogin.classList.remove('bg-white', 'text-[#4C2F27]', 'shadow-sm');
+        btnLogin.classList.add('text-[#4C2F27]/40');
+
+        // Переключаем формы
+        formLogin.classList.add('hidden', 'opacity-0', 'translate-y-4');
+        formRegister.classList.remove('hidden');
+        setTimeout(() => {
+            formRegister.classList.remove('opacity-0', 'translate-y-4');
+            formRegister.classList.add('opacity-100', 'translate-y-0');
+        }, 10);
+
+        if(errorMsg) errorMsg.classList.add('hidden');
+    }
+
+    function showLogin() {
+        // Меняем кнопки
+        btnLogin.classList.add('bg-white', 'text-[#4C2F27]', 'shadow-sm');
+        btnLogin.classList.remove('text-[#4C2F27]/40');
+        btnRegister.classList.remove('bg-white', 'text-[#4C2F27]', 'shadow-sm');
+        btnRegister.classList.add('text-[#4C2F27]/40');
+
+        // Переключаем формы
+        formRegister.classList.add('hidden', 'opacity-0', 'translate-y-4');
+        formLogin.classList.remove('hidden');
+        setTimeout(() => {
+            formLogin.classList.remove('opacity-0', 'translate-y-4');
+            formLogin.classList.add('opacity-100', 'translate-y-0');
+        }, 10);
+
+        if(errorMsg) errorMsg.classList.add('hidden');
+    }
+
+    btnRegister.addEventListener('click', showRegister);
+    btnLogin.addEventListener('click', showLogin);
+
+    // Если пришла ошибка регистрации, сразу открываем вкладку регистрации
+    {% if request.path == '/register' %}
+        showRegister();
+    {% endif %}
+</script>
+{% endblock %}
