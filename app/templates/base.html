@@ -3,121 +3,88 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{% block title %}Stylist{% endblock %}</title>
+  <title>{% block title %}Stylist.ai{% endblock %}</title>
 
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-nude: #DCC7C1;
+      --bg-dark: #4C2F27;
+      --text-main: #4C2F27;
+    }
+    body {
+      background-color: #DBC7C0; /* Немного обновил базовый фон под гардероб */
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-main);
+    }
+    .font-forum { font-family: 'Forum', serif; }
 
-<style>
-  :root {
-    --accent: #14b8a6;
-    --accent-dark: #0d9488;
-    --bg-main: #f1f5f9; /* Сделали фон чуть насыщеннее, чтобы белые карточки "выпрыгивали" */
-    --glass: rgba(255, 255, 255, 0.8);
-  }
-  body {
-    background-color: var(--bg-main);
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    letter-spacing: -0.01em;
-  }
-  .glass {
-    background: var(--glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    /* Добавляем тонкую светлую линию сверху и тень снизу для объема */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-  }
-  .card-modern {
-    background: white;
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 1); /* Белая граница на сером фоне создает эффект чистоты */
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.02);
-  }
-  .card-modern:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
-    border-color: var(--accent); /* Подсветка границы при наведении */
-  }
-</style>
+    .btn-dark {
+      background-color: var(--bg-dark);
+      color: white;
+      border-radius: 9999px;
+      transition: all 0.3s;
+    }
+    .btn-dark:hover { opacity: 0.9; transform: translateY(-1px); }
 
+        /* Улучшаем читаемость материала */
+    .material-tag {
+        font-family: 'Forum', serif; /* Или Sans, если хочешь более современный вид */
+        font-weight: 600;
+        letter-spacing: 0.05em;
+    }
+
+    /* Выделение блока категорий */
+    .category-container {
+        background: rgba(76, 47, 39, 0.03); /* Едва заметный оттенок основного цвета */
+        border-radius: 1.5rem;
+        padding: 1rem;
+        border: 1px solid rgba(76, 47, 39, 0.05);
+    }
+  </style>
   {% block head %}{% endblock %}
 </head>
-<body class="antialiased text-slate-900">
+<body class="antialiased">
 
-  <!-- NAV -->
-  <header class="sticky top-0 z-50 glass">
-  <div class="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+  <header class="bg-[#E3D4D0] py-5 px-16 flex items-center justify-between shadow-[0_2px_15px_rgba(0,0,0,0.03)] sticky top-0 z-[100]">
+  <a href="/" class="text-[36px] font-forum tracking-tight text-[#4C2F27] ml-8">
+    Stylist.ai
+  </a>
 
-    <a href="/" class="flex items-center gap-2 group shrink-0">
-      <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center transition-transform group-hover:rotate-12 shadow-lg shadow-black/10">
-        <span class="text-white font-bold text-xl">S</span>
+  <nav class="hidden md:flex items-center gap-14 text-[15px] uppercase tracking-[0.15em] text-[#4C2F27] opacity-80 ml-auto mr-12">
+    <a href="/wardrobe" class="hover:opacity-100 transition-opacity">Гардероб</a>
+    <a href="/capsules" class="hover:opacity-100 transition-opacity">Капсулы</a>
+    <a href="#" class="hover:opacity-100 transition-opacity">О стиле</a>
+  </nav>
+
+  <div class="flex items-center gap-10">
+    {% if current_user %}
+      <div class="flex items-center gap-6">
+        <div class="hidden sm:flex flex-col items-end leading-none">
+          <span class="text-[12px] uppercase tracking-widest text-[#4C2F27] opacity-40 font-bold">Аккаунт</span>
+          <span class="text-[16px] font-bold text-[#4C2F27] font-forum">{{ current_user.email.split('@')[0] }}</span>
+        </div>
+
+        <form method="post" action="/logout" class="inline m-0">
+           <button type="submit" class="px-6 py-2 rounded-full bg-[#4C2F27] text-[#DCC7C1] text-[13px] uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-black/5">
+             Выйти
+           </button>
+        </form>
       </div>
-      <span class="text-xl font-bold tracking-tight text-slate-900">Stylist<span class="text-teal-500">.</span>ai</span>
-    </a>
-
-    <div class="flex items-center gap-8">
-
-      <nav class="hidden md:flex items-center gap-6 text-sm font-semibold">
-        <a href="/wardrobe" class="text-slate-500 hover:text-teal-600 transition-colors">Гардероб</a>
-        <a href="/capsules" class="text-slate-500 hover:text-teal-600 transition-colors">Капсулы</a>
-        <a href="https://t.me/texelvirtualstylist" class="text-slate-500 hover:text-teal-600 transition-colors">О стиле</a>
-      </nav>
-
-      <div class="hidden md:block w-px h-6 bg-slate-200/60"></div>
-
-      <div class="flex items-center gap-4">
-        {% if current_user %}
-          <div class="flex items-center gap-4">
-            <div class="hidden sm:flex flex-col items-end leading-none">
-              <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Аккаунт</span>
-              <span class="text-sm font-bold text-slate-700">{{ current_user.email.split('@')[0] }}</span>
-            </div>
-
-            <form method="post" action="/logout" class="inline">
-               <button class="px-5 py-2.5 rounded-full bg-slate-100 text-slate-900 text-sm font-bold hover:bg-rose-50 hover:text-rose-600 transition-all border border-slate-200/50">
-                 Выйти
-               </button>
-            </form>
-          </div>
-        {% else %}
-          <a href="/login" class="text-sm font-bold text-slate-600 hover:text-black">Войти</a>
-          <a href="/register" class="px-6 py-2.5 rounded-full bg-teal-500 text-white text-sm font-bold hover:bg-teal-600 shadow-lg shadow-teal-500/25 transition-all">
-            Начать
-          </a>
-        {% endif %}
-      </div>
-    </div>
+    {% else %}
+      <a href="/login" class="text-[15px] border-b border-[#4C2F27]/30 text-[#4C2F27] hover:border-[#4C2F27] transition-colors">Войти</a>
+      <a href="/register" class="bg-[#4C2F27] text-[#DCC7C1] px-8 py-2.5 rounded-full text-[14px] uppercase tracking-widest hover:brightness-110 transition-all">
+        Начать
+      </a>
+    {% endif %}
   </div>
 </header>
 
-  <!-- MAIN -->
-  <main class="mx-auto max-w-5xl px-6 py-12">
-    {% if message %}
-      <div class="mb-6 p-4 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100">{{ message }}</div>
-    {% endif %}
-    {% if error %}
-      <div class="mb-6 p-4 rounded-md bg-rose-50 text-rose-700 border border-rose-100">{{ error }}</div>
-    {% endif %}
-
+  <main>
     {% block content %}{% endblock %}
   </main>
-
-  <!-- FOOTER -->
-  <footer class="mt-16">
-    <div class="mx-auto max-w-5xl px-6 py-6 text-sm text-slate-600 flex items-center justify-between">
-      <div>© Stylist — учебный проект</div>
-      <div class="flex gap-4">
-        <a href="/privacy" class="hover:text-slate-900">Политика приватности</a>
-        <a href="mailto:you@example.com" class="hover:text-slate-900">Контакты</a>
-      </div>
-    </div>
-  </footer>
 
 </body>
 </html>

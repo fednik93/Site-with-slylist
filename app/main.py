@@ -57,10 +57,21 @@ async def render_template(request: Request, template_name: str, context: dict | 
 async def init_db_and_migrate(pool: asyncpg.pool.Pool):
     async with pool.acquire() as conn:
         await conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    hashed_password TEXT NOT NULL,
+                    is_admin BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+                );
+                """)
+        await conn.execute("""
+        CREATE TABLE IF NOT EXISTS articles (
             id SERIAL PRIMARY KEY,
-            email TEXT Unique NOT NULL,
-            hashed_password TEXT NOT NULL,
+            title TEXT NOT NULL,
+            template_id INTEGER NOT NULL DEFAULT 1,
+            images JSONB, -- Тут будет лежать список ["путь1", "путь2", "путь3"...]
+            texts JSONB,  -- Список текстов
             created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
         );
         """)
@@ -144,7 +155,7 @@ async def homepage(request: Request):
 # регистрация - GET показывает форму, POST обрабатывает
 @app.get("/register", response_class=HTMLResponse)
 async def register_get(request: Request):
-    return await render_template(request, "register.html")
+    return await render_template(request, "auth.html")
 
 @app.post("/register", response_class=HTMLResponse)
 async def register_post(request: Request, email: str = Form(...), password: str = Form(...)):
@@ -154,7 +165,7 @@ async def register_post(request: Request, email: str = Form(...), password: str 
     async with db_pool.acquire() as conn:
         exists = await conn.fetchval("SELECT 1 FROM users WHERE email=$1", email)
         if exists:
-            return await render_template(request, "register.html", {"error": "Этот email уже зарегистрирован."})
+            return await render_template(request, "auth.html", {"error": "Этот email уже зарегистрирован."})
         hashed = hash_password(password)
         row = await conn.fetchrow("INSERT INTO users (email, hashed_password, created_at) VALUES ($1, $2, now()) RETURNING id", email, hashed)
         user_id = row["id"]
@@ -166,7 +177,7 @@ async def register_post(request: Request, email: str = Form(...), password: str 
 # логин
 @app.get("/login", response_class=HTMLResponse)
 async def login_get(request: Request):
-    return await render_template(request, "login.html")
+    return await render_template(request, "auth.html")
 
 @app.post("/login", response_class=HTMLResponse)
 async def login_post(request: Request, email: str = Form(...), password: str = Form(...)):
@@ -175,9 +186,9 @@ async def login_post(request: Request, email: str = Form(...), password: str = F
     async with db_pool.acquire() as conn:
         row = await conn.fetchrow("SELECT id, hashed_password FROM users WHERE email=$1", email)
     if not row:
-        return await render_template(request, "login.html", {"error": "Этот email уже зарегистрирован."})
+        return await render_template(request, "auth.html", {"error": "Этот email уже зарегистрирован."})
     if not verify_password(password, row["hashed_password"]):
-        return await render_template(request, "login.html", {"error": "Неверный email или пароль."})
+        return await render_template(request, "auth.html", {"error": "Неверный email или пароль."})
     request.session["user_id"] = int(row["id"])
     return RedirectResponse(url="/wardrobe", status_code=303)
 
